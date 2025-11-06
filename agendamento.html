@@ -351,6 +351,28 @@
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('date').setAttribute('min', today);
     </script>
+    <script type="module">
+  import { initEmailJS, enviarNotificacoesAgendamento } from "./notifications.js"
+
+  initEmailJS()
+
+  document.getElementById("booking-form").addEventListener("submit", async (e) => {
+    e.preventDefault()
+
+    const dadosAgendamento = {
+      nome: document.getElementById("nome").value,
+      email: document.getElementById("email").value,
+      telefone: document.getElementById("telefone").value,
+      servico: document.querySelector('input[name="service"]:checked').value,
+      barbeiro: document.querySelector('input[name="barber"]:checked').value,
+      data: document.getElementById("date").value,
+      hora: document.getElementById("time").value,
+    }
+
+    await enviarNotificacoesAgendamento(dadosAgendamento)
+    alert("Agendamento confirmado! Você receberá confirmação por WhatsApp e email.")
+  })
+</script>
 </body>
 </html>
 
