@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Barbearia Bitencourt</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-zinc-950 text-zinc-50 font-['Poppins']">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-zinc-900 border-b border-zinc-800 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-2xl font-bold">Painel <span class="text-amber-500">Administrativo</span></h1>
+                <div class="flex items-center gap-4">
+                    <span id="admin-name" class="text-zinc-400"></span>
+                    <button id="logout-btn" class="text-red-400 hover:text-red-300 transition-colors">Sair</button>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6">
+            <!-- Stats -->
+            <div class="grid md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-zinc-400 text-sm">Hoje</h3>
+                        <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <p id="stat-today" class="text-3xl font-bold">0</p>
+                    <p class="text-zinc-500 text-sm mt-1">agendamentos</p>
+                </div>
+
+                <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-zinc-400 text-sm">Pendentes</h3>
+                        <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <p id="stat-pending" class="text-3xl font-bold">0</p>
+                    <p class="text-zinc-500 text-sm mt-1">aguardando confirmação</p>
+                </div>
+
+                <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-zinc-400 text-sm">Confirmados</h3>
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <p id="stat-confirmed" class="text-3xl font-bold">0</p>
+                    <p class="text-zinc-500 text-sm mt-1">confirmados</p>
+                </div>
+
+                <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-zinc-400 text-sm">Total</h3>
+                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <p id="stat-total" class="text-3xl font-bold">0</p>
+                    <p class="text-zinc-500 text-sm mt-1">agendamentos</p>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 mb-6">
+                <div class="flex flex-wrap gap-4">
+                    <button onclick="filterBookings('all')" class="filter-btn active px-4 py-2 rounded-lg font-medium transition-colors bg-amber-500 text-zinc-950">
+                        Todos
+                    </button>
+                    <button onclick="filterBookings('pendente')" class="filter-btn px-4 py-2 rounded-lg font-medium transition-colors bg-zinc-800 text-zinc-300 hover:bg-zinc-700">
+                        Pendentes
+                    </button>
+                    <button onclick="filterBookings('confirmado')" class="filter-btn px-4 py-2 rounded-lg font-medium transition-colors bg-zinc-800 text-zinc-300 hover:bg-zinc-700">
+                        Confirmados
+                    </button>
+                    <button onclick="filterBookings('concluido')" class="filter-btn px-4 py-2 rounded-lg font-medium transition-colors bg-zinc-800 text-zinc-300 hover:bg-zinc-700">
+                        Concluídos
+                    </button>
+                    <input type="text" id="search-input" placeholder="Buscar por nome, data ou serviço..." class="flex-1 min-w-[250px] bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 focus:border-amber-500 focus:outline-none">
+                </div>
+            </div>
+
+            <!-- Bookings Table -->
+            <div class="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+                <div class="p-6 border-b border-zinc-800">
+                    <h2 class="text-xl font-bold">Agendamentos em Tempo Real</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-zinc-800/50">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-sm font-semibold">Cliente</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold">Serviço</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold">Barbeiro</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold">Data/Hora</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold">Telefone</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold">Status</th>
+                                <th class="px-6 py-4 text-left text-sm font-semibold">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookings-table" class="divide-y divide-zinc-800">
+                            <tr>
+                                <td colspan="7" class="px-6 py-8 text-center text-zinc-500">
+                                    Carregando agendamentos...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Integração com Firebase -->
+    <script type="module">
+        import { auth, db } from './firebaseConfig.js';
+        import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        import { collection, query, onSnapshot, doc, updateDoc, deleteDoc, orderBy } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+        const ADMIN_EMAIL = 'barbeiro@bitencourt.com';
+        let allBookings = [];
+        let currentFilter = 'all';
+
+        // Proteger rota - apenas barbeiro pode acessar
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                console.log('[v0] Usuário não autenticado, redirecionando para login');
+                window.location.href = 'login.html';
+            } else if (user.email !== ADMIN_EMAIL) {
+                console.log('[v0] Usuário não é admin, redirecionando');
+                alert('Acesso negado. Apenas o barbeiro pode acessar esta página.');
+                window.location.href = 'index.html';
+            } else {
+                console.log('[v0] Admin autenticado:', user.email);
+                document.getElementById('admin-name').textContent = `Olá, ${user.displayName || 'Admin'}`;
+                loadBookings();
+            }
+        });
+
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('[v0] Erro ao fazer logout:', error);
+            }
+        });
+
+        // Carregar agendamentos em tempo real
+        function loadBookings() {
+            const q = query(collection(db, 'agendamentos'), orderBy('criadoEm', 'desc'));
+            
+            onSnapshot(q, (snapshot) => {
+                allBookings = [];
+                snapshot.forEach((doc) => {
+                    allBookings.push({ id: doc.id, ...doc.data() });
+                });
+                
+                console.log('[v0] Agendamentos carregados:', allBookings.length);
+                updateStats();
+                renderBookings();
+            });
+        }
+
+        // Atualizar estatísticas
+        function updateStats() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayBookings = allBookings.filter(b => b.data === today);
+            const pendingBookings = allBookings.filter(b => b.status === 'pendente');
+            const confirmedBookings = allBookings.filter(b => b.status === 'confirmado');
+
+            document.getElementById('stat-today').textContent = todayBookings.length;
+            document.getElementById('stat-pending').textContent = pendingBookings.length;
+            document.getElementById('stat-confirmed').textContent = confirmedBookings.length;
+            document.getElementById('stat-total').textContent = allBookings.length;
+        }
+
+        // Renderizar agendamentos
+        function renderBookings() {
+            const tbody = document.getElementById('bookings-table');
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            
+            let filteredBookings = allBookings;
+            
+            // Filtrar por status
+            if (currentFilter !== 'all') {
+                filteredBookings = filteredBookings.filter(b => b.status === currentFilter);
+            }
+            
+            // Filtrar por busca
+            if (searchTerm) {
+                filteredBookings = filteredBookings.filter(b => 
+                    b.nome.toLowerCase().includes(searchTerm) ||
+                    b.servico.toLowerCase().includes(searchTerm) ||
+                    b.data.includes(searchTerm)
+                );
+            }
+
+            if (filteredBookings.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-zinc-500">
+                            Nenhum agendamento encontrado.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filteredBookings.map(booking => {
+                const statusColors = {
+                    'pendente': 'bg-yellow-500/10 text-yellow-500 border-yellow-500',
+                    'confirmado': 'bg-green-500/10 text-green-500 border-green-500',
+                    'concluido': 'bg-blue-500/10 text-blue-500 border-blue-500',
+                    'cancelado': 'bg-red-500/10 text-red-500 border-red-500'
+                };
+
+                return `
+                    <tr class="hover:bg-zinc-800/50">
+                        <td class="px-6 py-4">
+                            <div class="font-medium">${booking.nome}</div>
+                            <div class="text-sm text-zinc-500">${booking.email}</div>
+                        </td>
+                        <td class="px-6 py-4">${booking.servico}</td>
+                        <td class="px-6 py-4">${booking.barbeiro}</td>
+                        <td class="px-6 py-4">
+                            <div>${new Date(booking.data).toLocaleDateString('pt-BR')}</div>
+                            <div class="text-sm text-zinc-500">${booking.hora}</div>
+                        </td>
+                        <td class="px-6 py-4">${booking.telefone || '-'}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded-full text-xs font-medium border ${statusColors[booking.status]}">
+                                ${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex gap-2">
+                                ${booking.status === 'pendente' ? `
+                                    <button onclick="updateStatus('${booking.id}', 'confirmado')" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm">
+                                        Confirmar
+                                    </button>
+                                ` : ''}
+                                ${booking.status === 'confirmado' ? `
+                                    <button onclick="updateStatus('${booking.id}', 'concluido')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+                                        Concluir
+                                    </button>
+                                ` : ''}
+                                <button onclick="deleteBooking('${booking.id}')" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
+                                    Excluir
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Atualizar status
+        window.updateStatus = async function(bookingId, newStatus) {
+            try {
+                await updateDoc(doc(db, 'agendamentos', bookingId), {
+                    status: newStatus
+                });
+                console.log('[v0] Status atualizado:', bookingId, newStatus);
+            } catch (error) {
+                console.error('[v0] Erro ao atualizar status:', error);
+                alert('Erro ao atualizar status.');
+            }
+        };
+
+        // Excluir agendamento
+        window.deleteBooking = async function(bookingId) {
+            if (!confirm('Tem certeza que deseja excluir este agendamento?')) {
+                return;
+            }
+
+            try {
+                await deleteDoc(doc(db, 'agendamentos', bookingId));
+                console.log('[v0] Agendamento excluído:', bookingId);
+            } catch (error) {
+                console.error('[v0] Erro ao excluir agendamento:', error);
+                alert('Erro ao excluir agendamento.');
+            }
+        };
+
+        // Filtrar agendamentos
+        window.filterBookings = function(filter) {
+            currentFilter = filter;
+            
+            // Atualizar botões
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-amber-500', 'text-zinc-950');
+                btn.classList.add('bg-zinc-800', 'text-zinc-300');
+            });
+            event.target.classList.remove('bg-zinc-800', 'text-zinc-300');
+            event.target.classList.add('bg-amber-500', 'text-zinc-950');
+            
+            renderBookings();
+        };
+
+        // Busca em tempo real
+        document.getElementById('search-input').addEventListener('input', renderBookings);
+    </script>
+</body>
+</html>
+

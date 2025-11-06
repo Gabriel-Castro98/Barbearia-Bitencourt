@@ -1,0 +1,44 @@
+/* Custom styles for Barbearia Bitencourt */
+
+/* Service card selection */
+.service-option input:checked + .service-card {
+  border-color: rgb(245 158 11);
+  background-color: rgba(245, 158, 11, 0.1);
+}
+
+/* Barber card selection */
+.barber-option input:checked + .barber-card {
+  border-color: rgb(245 158 11);
+  background-color: rgba(245, 158, 11, 0.1);
+}
+
+/* Filter buttons */
+.filter-btn {
+  background-color: rgb(39 39 42);
+  color: rgb(161 161 170);
+}
+
+.filter-btn.active {
+  background-color: rgb(245 158 11);
+  color: rgb(24 24 27);
+}
+
+.filter-btn:hover {
+  background-color: rgb(63 63 70);
+}
+
+.filter-btn.active:hover {
+  background-color: rgb(251 191 36);
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* FAQ animations */
+.faq-item.active .faq-question svg {
+  transform: rotate(180deg);
+}

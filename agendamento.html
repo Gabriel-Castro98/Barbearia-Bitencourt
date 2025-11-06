@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agendamento - Barbearia Bitencourt</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Adicionado EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body class="bg-zinc-950 text-zinc-50 font-['Poppins']">
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <a href="index.html" class="flex items-center gap-2">
+                    <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"></path>
+                    </svg>
+                    <span class="text-xl font-bold">Barbearia <span class="text-amber-500">Bitencourt</span></span>
+                </a>
+                
+                <div class="hidden md:flex items-center gap-8">
+                    <!-- Adicionado nome do usuário e botão de sair -->
+                    <span id="user-name" class="text-zinc-400"></span>
+                    <a href="index.html" class="text-zinc-300 hover:text-amber-500 transition-colors">Início</a>
+                    <a href="index.html#servicos" class="text-zinc-300 hover:text-amber-500 transition-colors">Serviços</a>
+                    <a href="index.html#sobre" class="text-zinc-300 hover:text-amber-500 transition-colors">Sobre</a>
+                    <a href="ajuda.html" class="text-zinc-300 hover:text-amber-500 transition-colors">Contato</a>
+                    <button id="logout-btn" class="text-red-400 hover:text-red-300 transition-colors">Sair</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="pt-32 pb-20 px-4">
+        <div class="container mx-auto max-w-4xl">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold mb-4">Agende Seu <span class="text-amber-500">Horário</span></h1>
+                <p class="text-xl text-zinc-400">Preencha o formulário abaixo para reservar seu atendimento</p>
+            </div>
+
+            <div class="bg-zinc-900 rounded-2xl p-8 border border-zinc-800">
+                <form id="booking-form">
+                    <!-- Etapa 1: Serviço -->
+                    <div id="step-1" class="step">
+                        <h2 class="text-2xl font-bold mb-6">1. Escolha o Serviço</h2>
+                        <div class="grid md:grid-cols-3 gap-4 mb-8">
+                            <label class="service-option cursor-pointer">
+                                <input type="radio" name="service" value="Corte Clássico" data-price="45" class="hidden" required>
+                                <div class="service-card bg-zinc-800 border-2 border-zinc-700 rounded-xl p-6 hover:border-amber-500 transition-all">
+                                    <h3 class="font-bold text-lg mb-2">Corte Clássico</h3>
+                                    <p class="text-amber-500 text-xl font-bold">R$ 30</p>
+                                </div>
+                            </label>
+                            <label class="service-option cursor-pointer">
+                                <input type="radio" name="service" value="Barba Completa" data-price="40" class="hidden">
+                                <div class="service-card bg-zinc-800 border-2 border-zinc-700 rounded-xl p-6 hover:border-amber-500 transition-all">
+                                    <h3 class="font-bold text-lg mb-2">Barba Completa</h3>
+                                    <p class="text-amber-500 text-xl font-bold">R$ 35</p>
+                                </div>
+                            </label>
+                            <label class="service-option cursor-pointer">
+                                <input type="radio" name="service" value="Pacote Premium" data-price="75" class="hidden">
+                                <div class="service-card bg-zinc-800 border-2 border-zinc-700 rounded-xl p-6 hover:border-amber-500 transition-all">
+                                    <h3 class="font-bold text-lg mb-2">Combo: Corte + Barba</h3>
+                                    <p class="text-amber-500 text-xl font-bold">R$ 65</p>
+                                </div>
+                            </label>
+                        </div>
+                        <button type="button" onclick="nextStep(2)" class="w-full bg-amber-500 text-zinc-950 py-3 rounded-lg font-semibold hover:bg-amber-400 transition-colors">
+                            Próximo
+                        </button>
+                    </div>
+
+                    <!-- Etapa 2: Barbeiro -->
+                    <div id="step-2" class="step hidden">
+                        <h2 class="text-2xl font-bold mb-6">2. Escolha o Barbeiro</h2>
+                        <div class="space-y-4 mb-8">
+                            <label class="barber-option cursor-pointer block">
+                                <input type="radio" name="barber" value="Gustavo Bitencourt" class="hidden" required>
+                                <div class="barber-card bg-zinc-800 border-2 border-zinc-700 rounded-xl p-4 hover:border-amber-500 transition-all flex items-center gap-4">
+                                    <div class="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center">
+                                        <span class="text-2xl">👨</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-lg">Gustavo Bitencourt</h3>
+                                        <p class="text-zinc-400">Especialista em cortes clássicos</p>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="barber-option cursor-pointer block">
+                                <input type="radio" name="barber" value="Ricardo Silva" class="hidden">
+                                <div class="barber-card bg-zinc-800 border-2 border-zinc-700 rounded-xl p-4 hover:border-amber-500 transition-all flex items-center gap-4">
+                                    <div class="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center">
+                                        <span class="text-2xl">👨</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-lg">Ricardo Silva</h3>
+                                        <p class="text-zinc-400">Expert em barbas e degradês</p>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="barber-option cursor-pointer block">
+                                <input type="radio" name="barber" value="Fernando Santos" class="hidden">
+                                <div class="barber-card bg-zinc-800 border-2 border-zinc-700 rounded-xl p-4 hover:border-amber-500 transition-all flex items-center gap-4">
+                                    <div class="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center">
+                                        <span class="text-2xl">👨</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-lg">Fernando Santos</h3>
+                                        <p class="text-zinc-400">Especialista em cortes modernos</p>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="flex gap-4">
+                            <button type="button" onclick="prevStep(1)" class="flex-1 bg-zinc-700 text-zinc-300 py-3 rounded-lg font-semibold hover:bg-zinc-600 transition-colors">
+                                Voltar
+                            </button>
+                            <button type="button" onclick="nextStep(3)" class="flex-1 bg-amber-500 text-zinc-950 py-3 rounded-lg font-semibold hover:bg-amber-400 transition-colors">
+                                Próximo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Etapa 3: Data e Hora -->
+                    <div id="step-3" class="step hidden">
+                        <h2 class="text-2xl font-bold mb-6">3. Data e Horário</h2>
+                        <div class="space-y-6 mb-8">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Data</label>
+                                <input type="date" name="date" id="date" required class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 focus:border-amber-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Horário</label>
+                                <select name="time" id="time" required class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 focus:border-amber-500 focus:outline-none">
+                                    <option value="">Selecione um horário</option>
+                                    <option value="09:00">09:00</option>
+                                    <option value="10:00">10:00</option>
+                                    <option value="11:00">11:00</option>
+                                    <option value="14:00">14:00</option>
+                                    <option value="15:00">15:00</option>
+                                    <option value="16:00">16:00</option>
+                                    <option value="17:00">17:00</option>
+                                    <option value="18:00">18:00</option>
+                                    <option value="19:00">19:00</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <button type="button" onclick="prevStep(2)" class="flex-1 bg-zinc-700 text-zinc-300 py-3 rounded-lg font-semibold hover:bg-zinc-600 transition-colors">
+                                Voltar
+                            </button>
+                            <button type="button" onclick="nextStep(4)" class="flex-1 bg-amber-500 text-zinc-950 py-3 rounded-lg font-semibold hover:bg-amber-400 transition-colors">
+                                Próximo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Etapa 4: Confirmação -->
+                    <div id="step-4" class="step hidden">
+                        <h2 class="text-2xl font-bold mb-6">4. Confirmar Agendamento</h2>
+                        <div class="bg-zinc-800 rounded-xl p-6 mb-8">
+                            <h3 class="font-bold mb-4">Resumo do Agendamento</h3>
+                            <div class="space-y-3 text-zinc-300">
+                                <p><span class="text-zinc-500">Cliente:</span> <span id="summary-name"></span></p>
+                                <p><span class="text-zinc-500">Serviço:</span> <span id="summary-service"></span></p>
+                                <p><span class="text-zinc-500">Barbeiro:</span> <span id="summary-barber"></span></p>
+                                <p><span class="text-zinc-500">Data:</span> <span id="summary-date"></span></p>
+                                <p><span class="text-zinc-500">Horário:</span> <span id="summary-time"></span></p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <button type="button" onclick="prevStep(3)" class="flex-1 bg-zinc-700 text-zinc-300 py-3 rounded-lg font-semibold hover:bg-zinc-600 transition-colors">
+                                Voltar
+                            </button>
+                            <button type="submit" id="submit-btn" class="flex-1 bg-amber-500 text-zinc-950 py-3 rounded-lg font-semibold hover:bg-amber-400 transition-colors">
+                                Confirmar Agendamento
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-8 right-8 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg hidden">
+        <p class="font-semibold">Agendamento confirmado!</p>
+        <p class="text-sm">Você receberá uma confirmação por e-mail.</p>
+    </div>
+
+    <!-- Integração com Firebase -->
+    <script type="module">
+        import { auth, db } from './firebaseConfig.js';
+        import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        import { collection, addDoc, serverTimestamp, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+        import { initEmailJS, enviarNotificacoesAgendamento } from './notifications.js';
+
+        initEmailJS();
+
+        // Proteger rota - redirecionar se não estiver logado
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                console.log('[v0] Usuário não autenticado, redirecionando para login');
+                window.location.href = 'login.html';
+            } else {
+                console.log('[v0] Usuário autenticado:', user.email);
+                document.getElementById('user-name').textContent = `Olá, ${user.displayName || 'Cliente'}`;
+            }
+        });
+
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('[v0] Erro ao fazer logout:', error);
+            }
+        });
+
+        // Navegação entre etapas
+        window.nextStep = function(step) {
+            document.querySelectorAll('.step').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`step-${step}`).classList.remove('hidden');
+            
+            // Atualizar resumo na etapa 4
+            if (step === 4) {
+                const service = document.querySelector('input[name="service"]:checked').value;
+                const barber = document.querySelector('input[name="barber"]:checked').value;
+                const date = document.getElementById('date').value;
+                const time = document.getElementById('time').value;
+                
+                document.getElementById('summary-name').textContent = auth.currentUser.displayName;
+                document.getElementById('summary-service').textContent = service;
+                document.getElementById('summary-barber').textContent = barber;
+                document.getElementById('summary-date').textContent = new Date(date).toLocaleDateString('pt-BR');
+                document.getElementById('summary-time').textContent = time;
+            }
+        };
+
+        window.prevStep = function(step) {
+            document.querySelectorAll('.step').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`step-${step}`).classList.remove('hidden');
+        };
+
+        // Estilo para opções selecionadas
+        document.querySelectorAll('.service-option input, .barber-option input').forEach(input => {
+            input.addEventListener('change', function() {
+                const parent = this.closest('.service-option, .barber-option');
+                const siblings = parent.parentElement.querySelectorAll('.service-option, .barber-option');
+                siblings.forEach(s => s.querySelector('.service-card, .barber-card').classList.remove('border-amber-500'));
+                parent.querySelector('.service-card, .barber-card').classList.add('border-amber-500');
+            });
+        });
+
+        // Submeter formulário
+        const bookingForm = document.getElementById('booking-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const toast = document.getElementById('toast');
+
+        bookingForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const user = auth.currentUser;
+            if (!user) {
+                alert('Você precisa estar logado para fazer um agendamento.');
+                return;
+            }
+
+            const service = document.querySelector('input[name="service"]:checked').value;
+            const barber = document.querySelector('input[name="barber"]:checked').value;
+            const date = document.getElementById('date').value;
+            const time = document.getElementById('time').value;
+
+            submitBtn.textContent = 'Confirmando...';
+            submitBtn.disabled = true;
+
+            try {
+                let telefone = '';
+                try {
+                    const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
+                    if (userDoc.exists()) {
+                        telefone = userDoc.data().telefone || '';
+                    }
+                } catch (error) {
+                    console.warn('[v0] Erro ao buscar telefone do usuário:', error);
+                }
+
+                const dadosAgendamento = {
+                    nome: user.displayName,
+                    email: user.email,
+                    telefone: telefone,
+                    servico: service,
+                    barbeiro: barber,
+                    data: date,
+                    hora: time,
+                    userId: user.uid,
+                    status: 'pendente',
+                    criadoEm: serverTimestamp()
+                };
+
+                // Salvar agendamento no Firestore
+                const docRef = await addDoc(collection(db, 'agendamentos'), dadosAgendamento);
+                console.log('[v0] Agendamento criado com sucesso, ID:', docRef.id);
+
+                submitBtn.textContent = 'Enviando notificações...';
+                const resultadosNotificacoes = await enviarNotificacoesAgendamento(dadosAgendamento);
+                
+                console.log('[v0] Notificações enviadas:', resultadosNotificacoes);
+
+                const toastElement = document.getElementById('toast');
+                const toastTitle = toastElement.querySelector('p:first-child');
+                const toastMessage = toastElement.querySelector('p:last-child');
+                
+                toastTitle.textContent = 'Agendamento confirmado!';
+                
+                let mensagens = [];
+                if (resultadosNotificacoes.emailCliente.success) {
+                    const provedor = resultadosNotificacoes.emailCliente.provedor || 'email';
+                    mensagens.push(`Confirmação enviada para seu ${provedor}`);
+                }
+                if (resultadosNotificacoes.whatsappCliente.success) {
+                    mensagens.push('WhatsApp enviado');
+                }
+                if (mensagens.length === 0) {
+                    mensagens.push('Verifique seu email para confirmação');
+                }
+                
+                toastMessage.textContent = mensagens.join(' • ');
+
+                // Mostrar toast
+                toastElement.classList.remove('hidden');
+                setTimeout(() => {
+                    toastElement.classList.add('hidden');
+                    window.location.href = 'index.html';
+                }, 4000);
+            } catch (error) {
+                console.error('[v0] Erro ao criar agendamento:', error);
+                alert('Erro ao criar agendamento. Tente novamente.');
+                submitBtn.textContent = 'Confirmar Agendamento';
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Definir data mínima como hoje
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').setAttribute('min', today);
+    </script>
+</body>
+</html>
+
+
