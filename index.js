@@ -1,115 +1,78 @@
-// Firebase Cloud Functions para enviar WhatsApp via Twilio
-const functions = require("firebase-functions")
-const admin = require("firebase-admin")
-const twilio = require("twilio")
+import express from "express"
+import twilio from "twilio"
+import dotenv from "dotenv"
+import cors from "cors"
 
-admin.initializeApp()
-
-// Configuração do Twilio - adicione estas variáveis no Firebase Console
-// firebase functions:config:set twilio.account_sid="SEU_ACCOUNT_SID"
-// firebase functions:config:set twilio.auth_token="SEU_AUTH_TOKEN"
-// firebase functions:config:set twilio.whatsapp_number="whatsapp:+14155238886"
+dotenv.config()
+const app = express()
+app.use(express.json())
+app.use(cors())
 
 // ============================================
-// FUNÇÃO: Enviar WhatsApp
+// Rota: Enviar WhatsApp manualmente (POST /sendWhatsApp)
 // ============================================
-exports.sendWhatsApp = functions.https.onRequest(async (req, res) => {
-  // Configurar CORS
-  res.set("Access-Control-Allow-Origin", "*")
-  res.set("Access-Control-Allow-Methods", "POST, OPTIONS")
-  res.set("Access-Control-Allow-Headers", "Content-Type")
-
-  // Responder a preflight request
-  if (req.method === "OPTIONS") {
-    res.status(204).send("")
-    return
-  }
-
-  // Apenas aceitar POST
-  if (req.method !== "POST") {
-    res.status(405).send({ error: "Método não permitido" })
-    return
-  }
-
+app.post("/sendWhatsApp", async (req, res) => {
   try {
     const { to, message } = req.body
 
     if (!to || !message) {
-      res.status(400).send({ error: 'Parâmetros "to" e "message" são obrigatórios' })
-      return
+      return res.status(400).json({ error: 'Parâmetros "to" e "message" são obrigatórios' })
     }
 
-    // Obter credenciais do Twilio
-    const accountSid = functions.config().twilio.account_sid
-    const authToken = functions.config().twilio.auth_token
-    const twilioWhatsAppNumber = functions.config().twilio.whatsapp_number
+    const accountSid = process.env.TWILIO_ACCOUNT_SID
+    const authToken = process.env.TWILIO_AUTH_TOKEN
+    const twilioWhatsAppNumber = process.env.TWILIO_WHATSAPP_NUMBER
 
     if (!accountSid || !authToken || !twilioWhatsAppNumber) {
-      console.error("[v0] Credenciais do Twilio não configuradas")
-      res.status(500).send({ error: "Configuração do Twilio incompleta" })
-      return
+      console.error("❌ Credenciais do Twilio ausentes")
+      return res.status(500).json({ error: "Configuração do Twilio incompleta" })
     }
 
-    // Inicializar cliente Twilio
     const client = twilio(accountSid, authToken)
-
-    // Formatar número de telefone para WhatsApp
     const toWhatsApp = to.startsWith("whatsapp:") ? to : `whatsapp:${to}`
 
-    // Enviar mensagem
     const messageResponse = await client.messages.create({
       body: message,
       from: twilioWhatsAppNumber,
       to: toWhatsApp,
     })
 
-    console.log("[v0] WhatsApp enviado com sucesso:", messageResponse.sid)
-
-    res.status(200).send({
-      success: true,
-      messageSid: messageResponse.sid,
-    })
+    console.log("✅ WhatsApp enviado com sucesso:", messageResponse.sid)
+    res.status(200).json({ success: true, messageSid: messageResponse.sid })
   } catch (error) {
-    console.error("[v0] Erro ao enviar WhatsApp:", error)
-    res.status(500).send({
-      success: false,
-      error: error.message,
-    })
+    console.error("❌ Erro ao enviar WhatsApp:", error)
+    res.status(500).json({ success: false, error: error.message })
   }
 })
 
 // ============================================
-// FUNÇÃO: Listener de novos agendamentos (alternativa)
+// Rota: Notificação automática de novo agendamento
+// (para substituir o onCreate do Firestore)
 // ============================================
-// Esta função é acionada automaticamente quando um novo agendamento é criado
-// Não precisa ser chamada manualmente
-exports.onNovoAgendamento = functions.firestore
-  .document("agendamentos/{agendamentoId}")
-  .onCreate(async (snap, context) => {
-    const agendamento = snap.data()
+// Você pode chamar essa rota quando salvar um agendamento no Firestore
+// Exemplo: fetch("https://seuservidor.onrender.com/novoAgendamento", {...})
+app.post("/novoAgendamento", async (req, res) => {
+  const agendamento = req.body
 
-    console.log("[v0] Novo agendamento detectado:", context.params.agendamentoId)
+  console.log("📅 Novo agendamento recebido:", agendamento)
 
-    try {
-      // Obter credenciais do Twilio
-      const accountSid = functions.config().twilio.account_sid
-      const authToken = functions.config().twilio.auth_token
-      const twilioWhatsAppNumber = functions.config().twilio.whatsapp_number
-      const barbeiroWhatsApp = functions.config().barbeiro.whatsapp // Ex: +5511999999999
+  try {
+    const accountSid = process.env.TWILIO_ACCOUNT_SID
+    const authToken = process.env.TWILIO_AUTH_TOKEN
+    const twilioWhatsAppNumber = process.env.TWILIO_WHATSAPP_NUMBER
+    const barbeiroWhatsApp = process.env.BARBEIRO_WHATSAPP // Ex: +5511999999999
 
-      if (!accountSid || !authToken || !twilioWhatsAppNumber) {
-        console.error("[v0] Credenciais do Twilio não configuradas")
-        return
-      }
+    if (!accountSid || !authToken || !twilioWhatsAppNumber) {
+      console.error("❌ Credenciais do Twilio ausentes")
+      return res.status(500).json({ error: "Configuração do Twilio incompleta" })
+    }
 
-      const client = twilio(accountSid, authToken)
+    const client = twilio(accountSid, authToken)
+    const dataFormatada = new Date(agendamento.data).toLocaleDateString("pt-BR")
 
-      // Formatar data
-      const dataFormatada = new Date(agendamento.data).toLocaleDateString("pt-BR")
-
-      // Mensagem para o cliente
-      if (agendamento.telefone) {
-        const mensagemCliente = `
+    // Mensagem para o cliente
+    if (agendamento.telefone) {
+      const mensagemCliente = `
 🎉 *Agendamento Confirmado - Barbearia Bitencourt*
 
 Olá ${agendamento.nome}!
@@ -124,20 +87,20 @@ Seu agendamento foi confirmado com sucesso:
 📍 Endereço: Av. Paulista, 1000 - São Paulo, SP
 
 Aguardamos você! 💈
-        `.trim()
+      `.trim()
 
-        await client.messages.create({
-          body: mensagemCliente,
-          from: twilioWhatsAppNumber,
-          to: `whatsapp:${agendamento.telefone}`,
-        })
+      await client.messages.create({
+        body: mensagemCliente,
+        from: twilioWhatsAppNumber,
+        to: `whatsapp:${agendamento.telefone}`,
+      })
 
-        console.log("[v0] WhatsApp enviado para cliente:", agendamento.telefone)
-      }
+      console.log("✅ WhatsApp enviado para cliente:", agendamento.telefone)
+    }
 
-      // Mensagem para o barbeiro
-      if (barbeiroWhatsApp) {
-        const mensagemBarbeiro = `
+    // Mensagem para o barbeiro
+    if (barbeiroWhatsApp) {
+      const mensagemBarbeiro = `
 🔔 *Novo Agendamento - Barbearia Bitencourt*
 
 📋 *Detalhes do Cliente:*
@@ -151,20 +114,26 @@ Aguardamos você! 💈
 👨 *Barbeiro:* ${agendamento.barbeiro}
 
 Acesse o painel admin para mais detalhes.
-        `.trim()
+      `.trim()
 
-        await client.messages.create({
-          body: mensagemBarbeiro,
-          from: twilioWhatsAppNumber,
-          to: `whatsapp:${barbeiroWhatsApp}`,
-        })
+      await client.messages.create({
+        body: mensagemBarbeiro,
+        from: twilioWhatsAppNumber,
+        to: `whatsapp:${barbeiroWhatsApp}`,
+      })
 
-        console.log("[v0] WhatsApp enviado para barbeiro:", barbeiroWhatsApp)
-      }
-
-      return null
-    } catch (error) {
-      console.error("[v0] Erro ao enviar notificações WhatsApp:", error)
-      return null
+      console.log("✅ WhatsApp enviado para barbeiro:", barbeiroWhatsApp)
     }
-  })
+
+    res.status(200).json({ success: true })
+  } catch (error) {
+    console.error("❌ Erro ao enviar notificações WhatsApp:", error)
+    res.status(500).json({ success: false, error: error.message })
+  }
+})
+
+// ============================================
+// Inicialização do servidor
+// ============================================
+const PORT = process.env.PORT || 3000
+app.listen(PORT, () => console.log(`🚀 Servidor rodando na porta ${PORT}`))

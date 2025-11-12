@@ -1,9 +1,6 @@
 // Sistema de Notificações - Email e WhatsApp
 // Usando EmailJS para emails (client-side) e Twilio para WhatsApp (via Firebase Functions)
 
-// Importar emailjs
-import emailjs from "emailjs-com"
-
 // ============================================
 // CONFIGURAÇÃO EMAILJS
 // ============================================
@@ -122,7 +119,7 @@ async function enviarWhatsApp(telefone, mensagem) {
     console.log("[v0] Enviando WhatsApp para:", telefone)
 
     // Chamar Firebase Cloud Function
-    const response = await fetch("https://YOUR-REGION-YOUR-PROJECT.cloudfunctions.net/sendWhatsApp", {
+      const response = await fetch("https://barbearia-bitencourt.onrender.com/sendWhatsApp", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

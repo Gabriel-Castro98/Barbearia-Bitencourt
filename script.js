@@ -1,186 +1,275 @@
-// Mobile menu toggle
-const mobileMenuBtn = document.getElementById("mobile-menu-btn")
-const mobileMenu = document.getElementById("mobile-menu")
+import { auth, db } from "./firebase-config.js";
+import { addDoc, collection, getDocs, query, where, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+import { initEmailJS, enviarNotificacoesAgendamento } from "./notifications.js";
 
-if (mobileMenuBtn) {
+window.auth = auth;
+
+const serviceDurations = { "Corte Clássico": 30, "Barba Completa": 30, "Combo: Corte + Barba": 60 };
+let currentStep = 1;
+
+// ==================================================
+// FUNÇÕES DE USUÁRIO
+// ==================================================
+async function getUserName() {
+  const user = auth?.currentUser;
+  if (!user) return "Cliente";
+  if (user.displayName) return user.displayName;
+  try {
+    const userDoc = await getDoc(doc(db, "usuarios", user.uid));
+    if (userDoc.exists()) return userDoc.data().name || user.email.split("@")[0];
+  } catch (err) { console.warn(err); }
+  return user.email.split("@")[0];
+}
+
+// ==================================================
+// FUNÇÃO: Atualiza o resumo do agendamento
+// ==================================================
+async function updateSummary() {
+  const serviceEl = document.querySelector('input[name="service"]:checked');
+  const barberEl = document.querySelector('input[name="barber"]:checked');
+  const dateEl = document.getElementById("date");
+  const timeEl = document.getElementById("time");
+  if (!serviceEl || !barberEl || !dateEl || !timeEl) return;
+  const userName = await getUserName();
+  document.getElementById("summary-name").textContent = userName;
+  document.getElementById("summary-service").textContent = serviceEl.value;
+  document.getElementById("summary-barber").textContent = barberEl.value;
+  document.getElementById("summary-date").textContent = new Date(dateEl.value).toLocaleDateString("pt-BR");
+  document.getElementById("summary-time").textContent = timeEl.value;
+}
+
+// ==================================================
+// FUNÇÕES DE NAVEGAÇÃO ENTRE ETAPAS
+// ==================================================
+function showStep(step) {
+  document.querySelectorAll(".step").forEach(s => s.classList.add("hidden"));
+  document.getElementById(`step-${step}`).classList.remove("hidden");
+  currentStep = step;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+async function nextStep(step) { showStep(step); if (step === 4) await updateSummary(); }
+function prevStep(step) { showStep(step); }
+
+// ==================================================
+// HORÁRIOS DISPONÍVEIS
+// ==================================================
+async function updateAvailableTimes() {
+  const serviceInput = document.querySelector('input[name="service"]:checked');
+  const dateInput = document.getElementById("date");
+  const timeSelect = document.getElementById("time");
+  if (!serviceInput || !dateInput.value) {
+    timeSelect.innerHTML = `<option value="">Selecione uma data e serviço</option>`;
+    return;
+  }
+
+  const service = serviceInput.value;
+  const duration = serviceDurations[service] || 30;
+
+  const [year, month, day] = dateInput.value.split("-").map(Number);
+  const selectedDate = new Date(year, month - 1, day);
+  const today = new Date();
+  const isToday = selectedDate.toDateString() === today.toDateString();
+  const dayOfWeek = selectedDate.getDay();
+
+  if (dayOfWeek === 0) {
+    alert("Não trabalhamos no domingo!");
+    dateInput.value = "";
+    timeSelect.innerHTML = `<option value="">Selecione uma data e serviço</option>`;
+    return;
+  }
+
+  const opening = 9, closing = dayOfWeek === 6 ? 18 : 20, lunchStart = 12, lunchEnd = 13.5, interval = 15;
+  const slots = [];
+  for (let h = opening; h < closing; h++) {
+    for (let m = 0; m < 60; m += interval) {
+      const startMinutes = h * 60 + m;
+      const endMinutes = startMinutes + duration;
+      if (endMinutes > closing * 60) continue;
+      if (startMinutes < lunchEnd * 60 && endMinutes > lunchStart * 60) continue;
+      if (isToday && startMinutes <= today.getHours() * 60 + today.getMinutes()) continue;
+      slots.push(startMinutes);
+    }
+  }
+
+  const bookedTimes = [];
+  try {
+    const snapshot = await getDocs(query(collection(db, "agendamentos"), where("data", "==", dateInput.value)));
+    snapshot.forEach(doc => bookedTimes.push(doc.data()));
+  } catch (err) { console.error(err); }
+
+  timeSelect.innerHTML = `<option value="">Selecione um horário</option>`;
+  slots.forEach(minutes => {
+    const startH = Math.floor(minutes / 60), startM = minutes % 60, endMinutes = minutes + duration;
+    const occupied = bookedTimes.some(ag => {
+      const [h, m] = ag.horario?.split(":").map(Number) || [0, 0];
+      const agStart = h * 60 + m;
+      const agEnd = agStart + (serviceDurations[ag.servico] || 30);
+      return minutes < agEnd && endMinutes > agStart;
+    });
+    if (occupied) return;
+    const hStr = String(startH).padStart(2, "0"), mStr = String(startM).padStart(2, "0");
+    const option = document.createElement("option");
+    option.value = `${hStr}:${mStr}`;
+    option.textContent = `${hStr}:${mStr}`;
+    timeSelect.appendChild(option);
+  });
+
+  const oldWarning = document.getElementById("no-slots-warning");
+  if (oldWarning) oldWarning.remove();
+
+  if (timeSelect.options.length === 1) {
+    timeSelect.innerHTML = `<option value="">Nenhum horário disponível</option>`;
+    const warning = document.createElement("div");
+    warning.id = "no-slots-warning";
+    warning.innerHTML = `<span style="display:inline-block;margin-right:6px;animation:pulse 1.5s infinite;">⚠️</span>
+                         <span>Não há mais horários disponíveis neste dia.</span>`;
+    warning.style.color = "#eab308";
+    warning.style.marginTop = "8px";
+    warning.style.fontWeight = "600";
+    warning.style.textAlign = "center";
+    warning.style.opacity = "0";
+    warning.style.transition = "opacity 0.5s ease-in-out";
+    timeSelect.parentElement.appendChild(warning);
+    setTimeout(() => warning.style.opacity = "1", 50);
+  }
+  updateSummary();
+}
+
+// ==================================================
+// FUNÇÃO: Enviar WhatsApp via backend Render
+// ==================================================
+async function enviarWhatsApp(telefone, mensagem) {
+  try {
+    const response = await fetch("https://barbearia-bitencourt.onrender.com/sendWhatsApp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: telefone, message: mensagem }),
+    });
+    const result = await response.json();
+    return result.success;
+  } catch (err) {
+    console.error("[WhatsApp] Erro:", err);
+    return false;
+  }
+}
+
+// ==================================================
+// DOMContentLoaded (inicialização global)
+// ==================================================
+document.addEventListener("DOMContentLoaded", () => {
+  initEmailJS();
+
+  // MENU HAMBÚRGUER
+ const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+if (mobileMenu && mobileMenuBtn) {
   mobileMenuBtn.addEventListener("click", () => {
-    mobileMenu.classList.toggle("hidden")
-  })
+    mobileMenu.classList.toggle("hidden");
+  });
 }
 
-// Booking form multi-step
-let currentStep = 1
 
-function nextStep(step) {
-  const currentStepEl = document.getElementById(`step-${currentStep}`)
-  const nextStepEl = document.getElementById(`step-${step}`)
+  // LOGOUT
+  const logoutBtn = document.getElementById("logout-btn");
+  if (logoutBtn) logoutBtn.addEventListener("click", async () => { await auth.signOut(); window.location.href = "login.html"; });
 
-  // Validate current step
-  const inputs = currentStepEl.querySelectorAll("input[required], select[required]")
-  let isValid = true
+  // FAQ
+  document.querySelectorAll(".faq-item").forEach(item => {
+    const q = item.querySelector(".faq-question");
+    const a = item.querySelector(".faq-answer");
+    const icon = q?.querySelector("svg");
+    if (!q || !a) return;
+    q.addEventListener("click", () => {
+      const open = !a.classList.contains("hidden");
+      document.querySelectorAll(".faq-answer").forEach(el => el.classList.add("hidden"));
+      document.querySelectorAll(".faq-question svg").forEach(ic => ic.classList.remove("rotate-180"));
+      if (!open) { a.classList.remove("hidden"); icon?.classList.add("rotate-180"); }
+    });
+  });
 
-  inputs.forEach((input) => {
-    if (
-      !input.value ||
-      (input.type === "radio" && !currentStepEl.querySelector(`input[name="${input.name}"]:checked`))
-    ) {
-      isValid = false
-      input.classList.add("border-red-500")
-    } else {
-      input.classList.remove("border-red-500")
-    }
-  })
+  // FORM AGENDAMENTO
+  const bookingForm = document.getElementById("booking-form");
+  if (!bookingForm) return;
 
-  if (!isValid) {
-    alert("Por favor, preencha todos os campos obrigatórios.")
-    return
+  const dateInput = document.getElementById("date");
+  const timeSelect = document.getElementById("time");
+  const submitBtn = document.getElementById("submit-btn");
+  const toast = document.getElementById("toast");
+
+  if (dateInput) {
+    flatpickr.localize(flatpickr.l10ns.pt);
+    flatpickr(dateInput, {
+      minDate: "today",
+      dateFormat: "Y-m-d",
+      disable: [d => new Date(d.getTime() + d.getTimezoneOffset() * 60000).getDay() === 0],
+      locale: "pt",
+      onChange: updateAvailableTimes,
+      monthSelectorType: "dropdown",
+    });
   }
 
-  currentStepEl.classList.add("hidden")
-  nextStepEl.classList.remove("hidden")
-  currentStep = step
+  // Multi-step
+  ["next-1","next-2","next-3"].forEach((id,i)=>document.getElementById(id)?.addEventListener("click",()=>nextStep(i+2)));
+  ["prev-2","prev-3","prev-4"].forEach((id,i)=>document.getElementById(id)?.addEventListener("click",()=>prevStep(i+1)));
 
-  window.scrollTo({ top: 0, behavior: "smooth" })
-}
+  // Submissão
+  bookingForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    const user = auth.currentUser;
+    if (!user) return alert("Você precisa estar logado para agendar.");
 
-function prevStep(step) {
-  document.getElementById(`step-${currentStep}`).classList.add("hidden")
-  document.getElementById(`step-${step}`).classList.remove("hidden")
-  currentStep = step
+    const service = document.querySelector('input[name="service"]:checked').value;
+    const barber = document.querySelector('input[name="barber"]:checked').value;
+    const date = dateInput.value;
+    const horario = timeSelect.value;
 
-  window.scrollTo({ top: 0, behavior: "smooth" })
-}
+    submitBtn.textContent = "Confirmando...";
+    submitBtn.disabled = true;
 
-// Booking form submission
-const bookingForm = document.getElementById("booking-form")
-if (bookingForm) {
-  bookingForm.addEventListener("submit", (e) => {
-    e.preventDefault()
+    try {
+      let telefone = "";
+      const userDoc = await getDoc(doc(db, "usuarios", user.uid));
+      if (userDoc.exists()) telefone = userDoc.data().telefone || "";
 
-    const formData = new FormData(bookingForm)
-    const data = Object.fromEntries(formData)
+      await addDoc(collection(db, "agendamentos"), {
+        nome: user.displayName || user.email.split("@")[0],
+        email: user.email,
+        telefone,
+        servico: service,
+        barbeiro: barber,
+        data: date,
+        horario,
+        userId: user.uid,
+        status: "pendente",
+        criadoEm: serverTimestamp()
+      });
 
-    console.log("[v0] Booking data:", data)
+      await enviarNotificacoesAgendamento({ nome: user.displayName || user.email.split("@")[0], email: user.email, telefone, servico: service, barbeiro: barber, data: date, horario });
 
-    // Save to localStorage (simulating backend)
-    const bookings = JSON.parse(localStorage.getItem("bookings") || "[]")
-    bookings.push({
-      id: Date.now(),
-      ...data,
-      status: "pending",
-      createdAt: new Date().toISOString(),
-    })
-    localStorage.setItem("bookings", JSON.stringify(bookings))
-
-    showToast()
-
-    setTimeout(() => {
-      window.location.href = "index.html"
-    }, 2000)
-  })
-}
-
-// Login form
-const loginForm = document.getElementById("login-form")
-if (loginForm) {
-  loginForm.addEventListener("submit", (e) => {
-    e.preventDefault()
-
-    const formData = new FormData(loginForm)
-    const data = Object.fromEntries(formData)
-
-    console.log("[v0] Login data:", data)
-
-    // Simulate login
-    localStorage.setItem("user", JSON.stringify({ email: data.email }))
-
-    alert("Login realizado com sucesso!")
-    window.location.href = "index.html"
-  })
-}
-
-// Signup form
-const signupForm = document.getElementById("signup-form")
-if (signupForm) {
-  signupForm.addEventListener("submit", (e) => {
-    e.preventDefault()
-
-    const formData = new FormData(signupForm)
-    const data = Object.fromEntries(formData)
-
-    if (data.password !== data["confirm-password"]) {
-      alert("As senhas não coincidem!")
-      return
-    }
-
-    console.log("[v0] Signup data:", data)
-
-    // Simulate signup
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-      }),
-    )
-
-    alert("Conta criada com sucesso!")
-    window.location.href = "login.html"
-  })
-}
-
-// Contact form
-const contactForm = document.getElementById("contact-form")
-if (contactForm) {
-  contactForm.addEventListener("submit", (e) => {
-    e.preventDefault()
-
-    const formData = new FormData(contactForm)
-    const data = Object.fromEntries(formData)
-
-    console.log("[v0] Contact data:", data)
-
-    showToast()
-    contactForm.reset()
-  })
-}
-
-// FAQ accordion
-const faqQuestions = document.querySelectorAll(".faq-question")
-faqQuestions.forEach((question) => {
-  question.addEventListener("click", () => {
-    const faqItem = question.parentElement
-    const answer = faqItem.querySelector(".faq-answer")
-
-    // Close other FAQs
-    document.querySelectorAll(".faq-item").forEach((item) => {
-      if (item !== faqItem) {
-        item.classList.remove("active")
-        item.querySelector(".faq-answer").classList.add("hidden")
+      // WhatsApp mensagens
+      if (telefone) {
+        const msgCliente = `💈 *Barbearia Bitencourt* 💈\nOlá ${user.displayName || user.email.split("@")[0]}!\nSeu agendamento foi confirmado:\n📅 ${new Date(date).toLocaleDateString("pt-BR")}\n🕒 ${horario}\n✂️ ${service}\n👨‍🦱 ${barber}\nAguardamos você! 😎`;
+        await enviarWhatsApp(telefone, msgCliente);
       }
-    })
 
-    // Toggle current FAQ
-    faqItem.classList.toggle("active")
-    answer.classList.toggle("hidden")
-  })
-})
+      const msgBarbeiro = `📢 *Novo agendamento recebido!*\n👤 Cliente: ${user.displayName || user.email.split("@")[0]}\n📞 Telefone: ${telefone || "não informado"}\n✂️ Serviço: ${service}\n👨‍🦱 Barbeiro: ${barber}\n📅 ${new Date(date).toLocaleDateString("pt-BR")}\n🕒 ${horario}`;
+      await enviarWhatsApp("+5543984994564", msgBarbeiro);
 
-// Toast notification
-function showToast() {
-  const toast = document.getElementById("toast")
-  if (toast) {
-    toast.classList.remove("hidden")
-    setTimeout(() => {
-      toast.classList.add("hidden")
-    }, 3000)
-  }
-}
+      toast.querySelector("p:first-child").textContent = "Agendamento confirmado!";
+      toast.querySelector("p:last-child").textContent = "Você receberá uma confirmação por e-mail.";
+      toast.classList.remove("hidden","bg-red-500");
+      toast.classList.add("bg-green-500");
+      setTimeout(()=>{toast.classList.add("hidden");window.location.href="index.html";},4000);
+    } catch(err){
+      console.error(err);
+      toast.querySelector("p:first-child").textContent = "Erro no agendamento!";
+      toast.querySelector("p:last-child").textContent = "Tente novamente mais tarde.";
+      toast.classList.remove("hidden","bg-green-500");
+      toast.classList.add("bg-red-500");
+      setTimeout(()=>toast.classList.add("hidden"),4000);
+    } finally {
+      submitBtn.textContent = "Confirmar Agendamento";
+      submitBtn.disabled = false;
+    }
+  });
+});
 
-// Set minimum date for booking
-const dateInput = document.querySelector('input[type="date"]')
-if (dateInput) {
-  const today = new Date().toISOString().split("T")[0]
-  dateInput.setAttribute("min", today)
-}

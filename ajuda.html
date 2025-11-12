@@ -6,30 +6,56 @@
     <title>Ajuda e Contato - Barbearia Bitencourt</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-zinc-950 text-zinc-50 font-['Poppins']">
     <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 z-50 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800">
-        <nav class="container mx-auto px-4 py-4">
-            <div class="flex items-center justify-between">
-                <a href="index.html" class="flex items-center gap-2">
-                    <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"></path>
-                    </svg>
-                    <span class="text-xl font-bold">Barbearia <span class="text-amber-500">Bitencourt</span></span>
-                </a>
-                
-                <div class="hidden md:flex items-center gap-8">
-                    <a href="index.html" class="text-zinc-300 hover:text-amber-500 transition-colors">Início</a>
-                    <a href="index.html#servicos" class="text-zinc-300 hover:text-amber-500 transition-colors">Serviços</a>
-                    <a href="index.html#sobre" class="text-zinc-300 hover:text-amber-500 transition-colors">Sobre</a>
-                    <a href="ajuda.html" class="text-amber-500 hover:text-amber-400 transition-colors">Contato</a>
-                    <a href="agendamento.html" class="bg-amber-500 text-zinc-950 px-6 py-2 rounded-lg font-semibold hover:bg-amber-400 transition-colors">Agendar</a>
-                </div>
-            </div>
-        </nav>
-    </header>
+<!-- Header -->
+<header class="fixed top-0 left-0 right-0 z-50 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800">
+  <nav class="container mx-auto px-4 py-4">
+    <div class="flex items-center justify-between">
+      <!-- Logo -->
+      <a href="index.html" class="flex items-center gap-2">
+        <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z">
+          </path>
+        </svg>
+        <span class="text-xl font-bold">
+          Barbearia <span class="text-amber-500">Bitencourt</span>
+        </span>
+      </a>
+
+      <!-- Botão do menu mobile -->
+      <button id="mobile-menu-btn" class="md:hidden text-zinc-300 hover:text-amber-500 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      <!-- Menu desktop -->
+      <div class="hidden md:flex items-center gap-8">
+        <span id="user-name" class="text-zinc-400"></span>
+        <a href="index.html" class="text-zinc-300 hover:text-amber-500 transition-colors">Início</a>
+        <a href="index.html#servicos" class="text-zinc-300 hover:text-amber-500 transition-colors">Serviços</a>
+        <a href="index.html#sobre" class="text-zinc-300 hover:text-amber-500 transition-colors">Sobre</a>
+        <a href="ajuda.html" class="text-amber-500 hover:text-amber-400 transition-colors">Contato</a>
+        <button id="logout-btn" class="text-red-400 hover:text-red-300 transition-colors">Sair</button>
+      </div>
+    </div>
+
+    <!-- Menu Mobile -->
+    <div id="mobile-menu" class="hidden flex-col mt-3 space-y-2 md:hidden transform transition-all duration-200 ease-out">
+      <a href="index.html" class="block text-zinc-300 hover:text-amber-500 transition-colors">Início</a>
+      <a href="index.html#servicos" class="block text-zinc-300 hover:text-amber-500 transition-colors">Serviços</a>
+      <a href="index.html#sobre" class="block text-zinc-300 hover:text-amber-500 transition-colors">Sobre</a>
+      <a href="ajuda.html" class="block text-amber-500 hover:text-amber-400 transition-colors">Contato</a>
+      <button id="logout-btn-mobile" class="block text-red-400 hover:text-red-300 transition-colors">Sair</button>
+    </div>
+  </nav>
+</header>
+
 
     <main class="pt-32 pb-20 px-4">
         <div class="container mx-auto max-w-6xl">
@@ -176,7 +202,13 @@
         <p class="font-semibold">Mensagem enviada!</p>
         <p class="text-sm">Responderemos em breve.</p>
     </div>
-
-    <script src="script.js"></script>
+     <!-- Footer -->
+    <footer class="bg-zinc-900 py-12 px-4 mt-20">
+        <div class="container mx-auto text-center text-zinc-400">
+            <p>&copy; 2025 Barbearia Bitencourt. Todos os direitos reservados.</p>
+            <p>Desenvolvido por Gabriel Castro</p>
+        </div>
+    </footer>
+    <script type="module" src="script.js"></script>
 </body>
 </html>

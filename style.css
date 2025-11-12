@@ -42,3 +42,110 @@
 .faq-item.active .faq-question svg {
   transform: rotate(180deg);
 }
+/* Flatpickr Dark Theme Custom - Barbearia Bitencourt */
+
+/* Fundo geral do calendário */
+.flatpickr-calendar {
+  background-color: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  font-family: 'Poppins', sans-serif;
+  color: #f1f5f9;
+}
+
+/* Cabeçalho (mês/ano) */
+.flatpickr-months {
+  background-color: #27272a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  color: #facc15;
+}
+
+/* Texto do mês e ano */
+.flatpickr-current-month {
+  color: #facc15 !important;
+}
+
+/* Botões de navegação */
+.flatpickr-prev-month,
+.flatpickr-next-month {
+  color: #facc15;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.flatpickr-prev-month:hover,
+.flatpickr-next-month:hover {
+  color: #fbbf24;
+}
+
+/* Dias da semana (Seg, Ter...) */
+.flatpickr-weekday {
+  color: #facc15 !important;
+  font-weight: 500;
+  background-color: #27272a;
+  padding: 0.25rem 0;
+  text-transform: uppercase;
+}
+
+/* Dias do mês */
+.flatpickr-day {
+  background-color: #18181b;
+  color: #f1f5f9;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+/* Hover com animação leve */
+.flatpickr-day:hover {
+  background-color: #facc15;
+  color: #18181b;
+  transform: scale(1.08);
+}
+
+/* Dias selecionados */
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+  background-color: #fbbf24;
+  color: #18181b;
+  transform: scale(1.1);
+  transition: all 0.2s ease;
+}
+
+/* Hoje */
+.flatpickr-day.today {
+  border: 1px solid #facc15;
+  color: #facc15;
+}
+
+/* Dias desabilitados */
+.flatpickr-day.disabled {
+  color: #6b7280;
+  cursor: not-allowed;
+  background-color: transparent;
+  transform: none;
+}
+
+/* Input foco */
+.flatpickr-input:focus {
+  border-color: #facc15;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.3);
+}
+
+/* Pequena animação nos dias quando aparecem */
+.flatpickr-day {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(-4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+

@@ -6,7 +6,7 @@
     <title>Cadastro - Barbearia Bitencourt</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-zinc-950 text-zinc-50 font-['Poppins']">
     <div class="min-h-screen flex items-center justify-center px-4 py-12">
@@ -65,12 +65,19 @@
             </div>
         </div>
     </div>
+     <!-- Footer -->
+    <footer class="bg-zinc-900 py-12 px-4 mt-20">
+        <div class="container mx-auto text-center text-zinc-400">
+            <p>&copy; 2025 Barbearia Bitencourt. Todos os direitos reservados.</p>
+            <p>Desenvolvido por Gabriel Castro</p>
+        </div>
+    </footer>
 
     <!-- Integração com Firebase -->
     <script type="module">
-        import { auth, db } from './firebaseConfig.js';
-        import { createUserWithEmailAndPassword, updateProfile } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-        import { doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+        import { auth, db } from './firebase-config.js';
+        import { createUserWithEmailAndPassword, updateProfile } from 'https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js';
+        import { doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js';
 
         const signupForm = document.getElementById('signup-form');
         const signupBtn = document.getElementById('signup-btn');

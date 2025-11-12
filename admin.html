@@ -1,315 +1,257 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Admin - Barbearia Bitencourt</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel Admin - Barbearia Bitencourt</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease forwards;
+    }
+  </style>
 </head>
+
 <body class="bg-zinc-950 text-zinc-50 font-['Poppins']">
-    <div class="min-h-screen">
-        <!-- Header -->
-        <header class="bg-zinc-900 border-b border-zinc-800 px-6 py-4">
-            <div class="flex items-center justify-between">
-                <h1 class="text-2xl font-bold">Painel <span class="text-amber-500">Administrativo</span></h1>
-                <div class="flex items-center gap-4">
-                    <span id="admin-name" class="text-zinc-400"></span>
-                    <button id="logout-btn" class="text-red-400 hover:text-red-300 transition-colors">Sair</button>
-                </div>
-            </div>
-        </header>
+  <div class="min-h-screen flex flex-col">
 
-        <div class="p-6">
-            <!-- Stats -->
-            <div class="grid md:grid-cols-4 gap-6 mb-8">
-                <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
-                    <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-zinc-400 text-sm">Hoje</h3>
-                        <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
-                    </div>
-                    <p id="stat-today" class="text-3xl font-bold">0</p>
-                    <p class="text-zinc-500 text-sm mt-1">agendamentos</p>
-                </div>
+    <!-- NAVBAR / HEADER -->
+    <header class="bg-zinc-900 border-b border-zinc-800 px-6 py-4 relative">
+      <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold">
+          Painel <span class="text-amber-500">Administrativo</span>
+        </h1>
 
-                <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
-                    <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-zinc-400 text-sm">Pendentes</h3>
-                        <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <p id="stat-pending" class="text-3xl font-bold">0</p>
-                    <p class="text-zinc-500 text-sm mt-1">aguardando confirmação</p>
-                </div>
+        <!-- Menu Desktop -->
+        <nav class="hidden md:flex items-center gap-6">
+          <a href="#agendamentos" class="text-zinc-300 hover:text-amber-500 transition">Agendamentos</a>
+          <a href="#estatisticas" class="text-zinc-300 hover:text-amber-500 transition">Estatísticas</a>
+          <a href="index.html" class="text-zinc-300 hover:text-amber-500 transition">Área do Cliente</a>
+          <button id="logout-btn" class="text-red-400 hover:text-red-300 transition-colors">Sair</button>
+        </nav>
 
-                <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
-                    <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-zinc-400 text-sm">Confirmados</h3>
-                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <p id="stat-confirmed" class="text-3xl font-bold">0</p>
-                    <p class="text-zinc-500 text-sm mt-1">confirmados</p>
-                </div>
+        <!-- Botão hambúrguer -->
+        <button id="menu-btn" class="md:hidden flex flex-col justify-between w-6 h-5">
+          <span class="w-full h-0.5 bg-zinc-300 rounded"></span>
+          <span class="w-full h-0.5 bg-zinc-300 rounded"></span>
+          <span class="w-full h-0.5 bg-zinc-300 rounded"></span>
+        </button>
+      </div>
 
-                <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
-                    <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-zinc-400 text-sm">Total</h3>
-                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                        </svg>
-                    </div>
-                    <p id="stat-total" class="text-3xl font-bold">0</p>
-                    <p class="text-zinc-500 text-sm mt-1">agendamentos</p>
-                </div>
-            </div>
+      <!-- Menu Mobile -->
+      <nav id="mobile-menu" class="hidden flex-col bg-zinc-900 border-t border-zinc-800 mt-4 p-4 space-y-3 md:hidden rounded-xl">
+        <a href="#agendamentos" class="block text-zinc-300 hover:text-amber-500 transition">Agendamentos</a>
+        <a href="#estatisticas" class="block text-zinc-300 hover:text-amber-500 transition">Estatísticas</a>
+        <a href="index.html" class="block text-zinc-300 hover:text-amber-500 transition">Área do Cliente</a>
+        <button id="logout-btn-mobile" class="w-full text-left text-red-400 hover:text-red-300 transition-colors">Sair</button>
+      </nav>
+    </header>
 
-            <!-- Filters -->
-            <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 mb-6">
-                <div class="flex flex-wrap gap-4">
-                    <button onclick="filterBookings('all')" class="filter-btn active px-4 py-2 rounded-lg font-medium transition-colors bg-amber-500 text-zinc-950">
-                        Todos
-                    </button>
-                    <button onclick="filterBookings('pendente')" class="filter-btn px-4 py-2 rounded-lg font-medium transition-colors bg-zinc-800 text-zinc-300 hover:bg-zinc-700">
-                        Pendentes
-                    </button>
-                    <button onclick="filterBookings('confirmado')" class="filter-btn px-4 py-2 rounded-lg font-medium transition-colors bg-zinc-800 text-zinc-300 hover:bg-zinc-700">
-                        Confirmados
-                    </button>
-                    <button onclick="filterBookings('concluido')" class="filter-btn px-4 py-2 rounded-lg font-medium transition-colors bg-zinc-800 text-zinc-300 hover:bg-zinc-700">
-                        Concluídos
-                    </button>
-                    <input type="text" id="search-input" placeholder="Buscar por nome, data ou serviço..." class="flex-1 min-w-[250px] bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 focus:border-amber-500 focus:outline-none">
-                </div>
-            </div>
-
-            <!-- Bookings Table -->
-            <div class="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
-                <div class="p-6 border-b border-zinc-800">
-                    <h2 class="text-xl font-bold">Agendamentos em Tempo Real</h2>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-zinc-800/50">
-                            <tr>
-                                <th class="px-6 py-4 text-left text-sm font-semibold">Cliente</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold">Serviço</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold">Barbeiro</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold">Data/Hora</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold">Telefone</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold">Status</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bookings-table" class="divide-y divide-zinc-800">
-                            <tr>
-                                <td colspan="7" class="px-6 py-8 text-center text-zinc-500">
-                                    Carregando agendamentos...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-1 p-6 space-y-6">
+      <!-- Stats -->
+      <div id="estatisticas" class="grid md:grid-cols-4 gap-6">
+        <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
+          <h3 class="text-zinc-400 text-sm mb-2">Hoje</h3>
+          <p id="stat-today" class="text-3xl font-bold">0</p>
+          <p class="text-zinc-500 text-sm mt-1">agendamentos</p>
         </div>
-    </div>
+        <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
+          <h3 class="text-zinc-400 text-sm mb-2">Pendentes</h3>
+          <p id="stat-pending" class="text-3xl font-bold">0</p>
+          <p class="text-zinc-500 text-sm mt-1">aguardando confirmação</p>
+        </div>
+        <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
+          <h3 class="text-zinc-400 text-sm mb-2">Confirmados</h3>
+          <p id="stat-confirmed" class="text-3xl font-bold">0</p>
+          <p class="text-zinc-500 text-sm mt-1">confirmados</p>
+        </div>
+        <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
+          <h3 class="text-zinc-400 text-sm mb-2">Total</h3>
+          <p id="stat-total" class="text-3xl font-bold">0</p>
+          <p class="text-zinc-500 text-sm mt-1">agendamentos</p>
+        </div>
+      </div>
 
-    <!-- Integração com Firebase -->
-    <script type="module">
-        import { auth, db } from './firebaseConfig.js';
-        import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-        import { collection, query, onSnapshot, doc, updateDoc, deleteDoc, orderBy } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+      <!-- Filtros -->
+      <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
+        <div class="flex flex-wrap gap-4">
+          <button onclick="filterBookings('all', event)" class="filter-btn active px-4 py-2 rounded-lg font-medium transition-colors bg-amber-500 text-zinc-950">Todos</button>
+          <button onclick="filterBookings('pendente', event)" class="filter-btn px-4 py-2 rounded-lg font-medium transition-colors bg-zinc-800 text-zinc-300 hover:bg-zinc-700">Pendentes</button>
+          <button onclick="filterBookings('confirmado', event)" class="filter-btn px-4 py-2 rounded-lg font-medium transition-colors bg-zinc-800 text-zinc-300 hover:bg-zinc-700">Confirmados</button>
+          <button onclick="filterBookings('concluido', event)" class="filter-btn px-4 py-2 rounded-lg font-medium transition-colors bg-zinc-800 text-zinc-300 hover:bg-zinc-700">Concluídos</button>
+          <input type="text" id="search-input" placeholder="Buscar por nome, data ou serviço..." class="flex-1 min-w-[250px] bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 focus:border-amber-500 focus:outline-none">
+        </div>
+      </div>
 
-        const ADMIN_EMAIL = 'barbeiro@bitencourt.com';
-        let allBookings = [];
-        let currentFilter = 'all';
+      <!-- Tabela -->
+      <section id="agendamentos" class="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+        <div class="p-6 border-b border-zinc-800">
+          <h2 class="text-xl font-bold">Agendamentos em Tempo Real</h2>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-zinc-800/50">
+              <tr>
+                <th class="px-6 py-4 text-left text-sm font-semibold">Cliente</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold">Serviço</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold">Barbeiro</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold">Data/Hora</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold">Telefone</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold">Status</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="bookings-table" class="divide-y divide-zinc-800">
+              <tr><td colspan="7" class="px-6 py-8 text-center text-zinc-500">Carregando agendamentos...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
 
-        // Proteger rota - apenas barbeiro pode acessar
-        onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                console.log('[v0] Usuário não autenticado, redirecionando para login');
-                window.location.href = 'login.html';
-            } else if (user.email !== ADMIN_EMAIL) {
-                console.log('[v0] Usuário não é admin, redirecionando');
-                alert('Acesso negado. Apenas o barbeiro pode acessar esta página.');
-                window.location.href = 'index.html';
-            } else {
-                console.log('[v0] Admin autenticado:', user.email);
-                document.getElementById('admin-name').textContent = `Olá, ${user.displayName || 'Admin'}`;
-                loadBookings();
-            }
-        });
+     <!-- Footer -->
+    <footer class="bg-zinc-900 py-12 px-4 mt-20">
+        <div class="container mx-auto text-center text-zinc-400">
+            <p>&copy; 2025 Barbearia Bitencourt. Todos os direitos reservados.</p>
+            <p>Desenvolvido por Gabriel Castro</p>
+        </div>
+    </footer>
 
-        // Logout
-        document.getElementById('logout-btn').addEventListener('click', async () => {
-            try {
-                await signOut(auth);
-                window.location.href = 'login.html';
-            } catch (error) {
-                console.error('[v0] Erro ao fazer logout:', error);
-            }
-        });
+  <!-- SCRIPT -->
+  <script type="module">
+    import { auth, db } from "./firebase-config.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+    import { collection, query, onSnapshot, doc, updateDoc, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-        // Carregar agendamentos em tempo real
-        function loadBookings() {
-            const q = query(collection(db, 'agendamentos'), orderBy('criadoEm', 'desc'));
-            
-            onSnapshot(q, (snapshot) => {
-                allBookings = [];
-                snapshot.forEach((doc) => {
-                    allBookings.push({ id: doc.id, ...doc.data() });
-                });
-                
-                console.log('[v0] Agendamentos carregados:', allBookings.length);
-                updateStats();
-                renderBookings();
-            });
-        }
+    const ADMIN_EMAIL = "ytbgugu979@gmail.com";
+    let allBookings = [];
+    let currentFilter = "all";
 
-        // Atualizar estatísticas
-        function updateStats() {
-            const today = new Date().toISOString().split('T')[0];
-            const todayBookings = allBookings.filter(b => b.data === today);
-            const pendingBookings = allBookings.filter(b => b.status === 'pendente');
-            const confirmedBookings = allBookings.filter(b => b.status === 'confirmado');
+    // 🔒 Proteção silenciosa de acesso
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+      } else if (user.email !== ADMIN_EMAIL) {
+        window.location.href = "index.html";
+      } else {
+        loadBookings();
+      }
+    });
 
-            document.getElementById('stat-today').textContent = todayBookings.length;
-            document.getElementById('stat-pending').textContent = pendingBookings.length;
-            document.getElementById('stat-confirmed').textContent = confirmedBookings.length;
-            document.getElementById('stat-total').textContent = allBookings.length;
-        }
+    // 📊 Carregar agendamentos
+    function loadBookings() {
+      const q = query(collection(db, "agendamentos"), orderBy("criadoEm", "desc"));
+      onSnapshot(q, (snapshot) => {
+        allBookings = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        updateStats();
+        renderBookings();
+      });
+    }
 
-        // Renderizar agendamentos
-        function renderBookings() {
-            const tbody = document.getElementById('bookings-table');
-            const searchTerm = document.getElementById('search-input').value.toLowerCase();
-            
-            let filteredBookings = allBookings;
-            
-            // Filtrar por status
-            if (currentFilter !== 'all') {
-                filteredBookings = filteredBookings.filter(b => b.status === currentFilter);
-            }
-            
-            // Filtrar por busca
-            if (searchTerm) {
-                filteredBookings = filteredBookings.filter(b => 
-                    b.nome.toLowerCase().includes(searchTerm) ||
-                    b.servico.toLowerCase().includes(searchTerm) ||
-                    b.data.includes(searchTerm)
-                );
-            }
+    function updateStats() {
+      const today = new Date().toISOString().split("T")[0];
+      document.getElementById("stat-today").textContent = allBookings.filter((b) => b.data === today).length;
+      document.getElementById("stat-pending").textContent = allBookings.filter((b) => b.status === "pendente").length;
+      document.getElementById("stat-confirmed").textContent = allBookings.filter((b) => b.status === "confirmado").length;
+      document.getElementById("stat-total").textContent = allBookings.length;
+    }
 
-            if (filteredBookings.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="px-6 py-8 text-center text-zinc-500">
-                            Nenhum agendamento encontrado.
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
+    function renderBookings() {
+      const tbody = document.getElementById("bookings-table");
+      const searchTerm = document.getElementById("search-input").value.toLowerCase();
+      let filtered = allBookings;
 
-            tbody.innerHTML = filteredBookings.map(booking => {
-                const statusColors = {
-                    'pendente': 'bg-yellow-500/10 text-yellow-500 border-yellow-500',
-                    'confirmado': 'bg-green-500/10 text-green-500 border-green-500',
-                    'concluido': 'bg-blue-500/10 text-blue-500 border-blue-500',
-                    'cancelado': 'bg-red-500/10 text-red-500 border-red-500'
-                };
+      if (currentFilter !== "all") filtered = filtered.filter((b) => b.status === currentFilter);
+      if (searchTerm)
+        filtered = filtered.filter(
+          (b) =>
+            b.nome.toLowerCase().includes(searchTerm) ||
+            b.servico.toLowerCase().includes(searchTerm) ||
+            b.data.includes(searchTerm)
+        );
 
-                return `
-                    <tr class="hover:bg-zinc-800/50">
-                        <td class="px-6 py-4">
-                            <div class="font-medium">${booking.nome}</div>
-                            <div class="text-sm text-zinc-500">${booking.email}</div>
-                        </td>
-                        <td class="px-6 py-4">${booking.servico}</td>
-                        <td class="px-6 py-4">${booking.barbeiro}</td>
-                        <td class="px-6 py-4">
-                            <div>${new Date(booking.data).toLocaleDateString('pt-BR')}</div>
-                            <div class="text-sm text-zinc-500">${booking.hora}</div>
-                        </td>
-                        <td class="px-6 py-4">${booking.telefone || '-'}</td>
-                        <td class="px-6 py-4">
-                            <span class="px-3 py-1 rounded-full text-xs font-medium border ${statusColors[booking.status]}">
-                                ${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="flex gap-2">
-                                ${booking.status === 'pendente' ? `
-                                    <button onclick="updateStatus('${booking.id}', 'confirmado')" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm">
-                                        Confirmar
-                                    </button>
-                                ` : ''}
-                                ${booking.status === 'confirmado' ? `
-                                    <button onclick="updateStatus('${booking.id}', 'concluido')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
-                                        Concluir
-                                    </button>
-                                ` : ''}
-                                <button onclick="deleteBooking('${booking.id}')" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
-                                    Excluir
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-zinc-500">Nenhum agendamento encontrado.</td></tr>`;
+        return;
+      }
 
-        // Atualizar status
-        window.updateStatus = async function(bookingId, newStatus) {
-            try {
-                await updateDoc(doc(db, 'agendamentos', bookingId), {
-                    status: newStatus
-                });
-                console.log('[v0] Status atualizado:', bookingId, newStatus);
-            } catch (error) {
-                console.error('[v0] Erro ao atualizar status:', error);
-                alert('Erro ao atualizar status.');
-            }
-        };
+      const statusColors = {
+        pendente: "bg-yellow-500/10 text-yellow-500 border-yellow-500",
+        confirmado: "bg-green-500/10 text-green-500 border-green-500",
+        concluido: "bg-blue-500/10 text-blue-500 border-blue-500",
+        cancelado: "bg-red-500/10 text-red-500 border-red-500",
+      };
 
-        // Excluir agendamento
-        window.deleteBooking = async function(bookingId) {
-            if (!confirm('Tem certeza que deseja excluir este agendamento?')) {
-                return;
-            }
+      tbody.innerHTML = filtered
+        .map(
+          (b) => `
+        <tr class="hover:bg-zinc-800/50 transition">
+          <td class="px-6 py-4"><div class="font-medium">${b.nome}</div><div class="text-sm text-zinc-500">${b.email}</div></td>
+          <td class="px-6 py-4">${b.servico}</td>
+          <td class="px-6 py-4">${b.barbeiro}</td>
+          <td class="px-6 py-4"><div>${new Date(b.data).toLocaleDateString("pt-BR")}</div><div class="text-sm text-zinc-500">${b.hora}</div></td>
+          <td class="px-6 py-4">${b.telefone || "-"}</td>
+          <td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-xs font-medium border ${statusColors[b.status]}">${b.status.charAt(0).toUpperCase() + b.status.slice(1)}</span></td>
+          <td class="px-6 py-4">
+            <div class="flex gap-2">
+              ${b.status === "pendente" ? `<button onclick="updateStatus('${b.id}','confirmado')" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm">Confirmar</button>` : ""}
+              ${b.status === "confirmado" ? `<button onclick="updateStatus('${b.id}','concluido')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">Concluir</button>` : ""}
+              <button onclick="deleteBooking('${b.id}')" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">Excluir</button>
+            </div>
+          </td>
+        </tr>`
+        )
+        .join("");
+    }
 
-            try {
-                await deleteDoc(doc(db, 'agendamentos', bookingId));
-                console.log('[v0] Agendamento excluído:', bookingId);
-            } catch (error) {
-                console.error('[v0] Erro ao excluir agendamento:', error);
-                alert('Erro ao excluir agendamento.');
-            }
-        };
+    window.updateStatus = async function (id, status) {
+      await updateDoc(doc(db, "agendamentos", id), { status });
+    };
 
-        // Filtrar agendamentos
-        window.filterBookings = function(filter) {
-            currentFilter = filter;
-            
-            // Atualizar botões
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('bg-amber-500', 'text-zinc-950');
-                btn.classList.add('bg-zinc-800', 'text-zinc-300');
-            });
-            event.target.classList.remove('bg-zinc-800', 'text-zinc-300');
-            event.target.classList.add('bg-amber-500', 'text-zinc-950');
-            
-            renderBookings();
-        };
+    window.deleteBooking = async function (id) {
+      if (!confirm("Tem certeza que deseja excluir este agendamento?")) return;
+      await deleteDoc(doc(db, "agendamentos", id));
+    };
 
-        // Busca em tempo real
-        document.getElementById('search-input').addEventListener('input', renderBookings);
-    </script>
+    window.filterBookings = function (filter, event) {
+      currentFilter = filter;
+      document.querySelectorAll(".filter-btn").forEach((btn) => {
+        btn.classList.remove("bg-amber-500", "text-zinc-950");
+        btn.classList.add("bg-zinc-800", "text-zinc-300");
+      });
+      if (event) {
+        event.target.classList.remove("bg-zinc-800", "text-zinc-300");
+        event.target.classList.add("bg-amber-500", "text-zinc-950");
+      }
+      renderBookings();
+    };
+
+    document.getElementById("search-input").addEventListener("input", renderBookings);
+
+    // 🍔 Menu hambúrguer com animação
+    const menuBtn = document.getElementById("menu-btn");
+    const mobileMenu = document.getElementById("mobile-menu");
+    const logoutBtnMobile = document.getElementById("logout-btn-mobile");
+
+    menuBtn.addEventListener("click", () => {
+      mobileMenu.classList.toggle("hidden");
+      if (!mobileMenu.classList.contains("hidden")) {
+        mobileMenu.classList.add("animate-fadeIn");
+      }
+    });
+
+    logoutBtnMobile.addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "login.html";
+    });
+  </script>
 </body>
 </html>
 
