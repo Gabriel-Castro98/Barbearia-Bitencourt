@@ -10,73 +10,77 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-</head>
-<body class="bg-zinc-950 text-zinc-50 font-['Poppins']">
-    <!-- Header -->
-<header class="fixed top-0 left-0 right-0 z-50 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800">
-  <nav class="container mx-auto px-4 py-4">
-    <div class="flex items-center justify-between">
-      <!-- Logo -->
-      <a href="index.html" class="flex items-center gap-2">
-        <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z">
-          </path>
-        </svg>
-        <span class="text-xl font-bold">
-          Barbearia <span class="text-amber-500">Bitencourt</span>
-        </span>
-      </a>
-
-      <!-- Botão menu mobile -->
-      <button id="mobile-menu-btn" class="md:hidden text-zinc-300 hover:text-amber-500 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-
-      <!-- Menu desktop -->
-      <div class="hidden md:flex items-center gap-8">
-        <span id="user-greeting" class="text-zinc-400"></span>
-        <a href="index.html" class="text-amber-500 hover:text-amber-400 transition-colors">Início</a>
-        <a href="#servicos" class="text-zinc-300 hover:text-amber-500 transition-colors">Serviços</a>
-        <a href="#sobre" class="text-zinc-300 hover:text-amber-500 transition-colors">Sobre</a>
-        <a href="ajuda.html" class="text-zinc-300 hover:text-amber-500 transition-colors">Contato</a>
-        <a href="agendamento.html" id="agendar-btn"
-          class="bg-amber-500 text-zinc-950 px-6 py-2 rounded-lg font-semibold hover:bg-amber-400 transition-colors">
-          Agendar
+<head>
+    <body class="bg-zinc-950 text-zinc-50 font-['Poppins']">
+        <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800">
+    <nav class="container mx-auto px-4 py-4">
+        <div class="flex items-center justify-between">
+        <!-- Logo -->
+        <a href="index.html" class="flex items-center gap-2">
+            <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z">
+            </path>
+            </svg>
+            <span class="text-xl font-bold">
+            Barbearia <span class="text-amber-500">Bitencourt</span>
+            </span>
         </a>
-        <button id="logout-btn" class="hidden text-red-400 hover:text-red-300 transition-colors">Sair</button>
-        <a href="login.html" id="login-btn" class="text-zinc-300 hover:text-amber-500 transition-colors">Entrar</a>
-      </div>
-    </div>
 
-    <!-- Menu mobile -->
-    <div id="mobile-menu"
-      class="hidden flex-col mt-3 space-y-2 md:hidden transform transition-all duration-200 ease-out">
-      <span id="mobile-user-greeting" class="text-zinc-400"></span>
-      <a href="index.html" class="block text-amber-500 hover:text-amber-400 transition-colors">Início</a>
-      <a href="#servicos" class="block text-zinc-300 hover:text-amber-500 transition-colors">Serviços</a>
-      <a href="#sobre" class="block text-zinc-300 hover:text-amber-500 transition-colors">Sobre</a>
-      <a href="ajuda.html" class="block text-zinc-300 hover:text-amber-500 transition-colors">Contato</a>
-      <a href="agendamento.html"
-        class="block bg-amber-500 text-zinc-950 px-6 py-2 rounded-lg font-semibold hover:bg-amber-400 transition-colors text-center">
-        Agendar
-      </a>
-      <button id="mobile-logout-btn"
-        class="hidden block text-red-400 hover:text-red-300 transition-colors">Sair</button>
-      <a href="login.html" id="mobile-login-btn"
-        class="block text-zinc-300 hover:text-amber-500 transition-colors">Entrar</a>
-    </div>
-  </nav>
-</header>
+        <!-- Botão menu mobile -->
+        <button id="mobile-menu-btn" class="md:hidden text-zinc-300 hover:text-amber-500 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
 
-<!-- Hero Section -->
-<section class="pt-32 pb-20 px-4">
-    <div class="container mx-auto">
-        <div class="grid md:grid-cols-2 gap-12 items-center">
-            <div>
+        <!-- Menu desktop -->
+        <div class="hidden md:flex items-center gap-8">
+            <span id="user-greeting" class="text-zinc-400"></span>
+            <a href="index.html" class="text-amber-500 hover:text-amber-400 transition-colors">Início</a>
+            <a href="#servicos" class="text-zinc-300 hover:text-amber-500 transition-colors">Serviços</a>
+            <a href="#sobre" class="text-zinc-300 hover:text-amber-500 transition-colors">Sobre</a>
+            <a href="ajuda.html" class="text-zinc-300 hover:text-amber-500 transition-colors">Contato</a>
+            <a href="agendamento.html" id="agendar-btn"
+            class="bg-amber-500 text-zinc-950 px-6 py-2 rounded-lg font-semibold hover:bg-amber-400 transition-colors">
+            Agendar</a>
+            <a href="admin.html" id="admin-btn" class="hidden text-zinc-300 hover:text-amber-500 transition-colors">Painel Admin</a>
+
+            <button id="logout-btn" class="hidden text-red-400 hover:text-red-300 transition-colors">Sair</button>
+            <a href="login.html" id="login-btn" class="text-zinc-300 hover:text-amber-500 transition-colors">Entrar</a>
+
+        </div>
+        </div>
+
+        <!-- Menu mobile -->
+        <div id="mobile-menu"
+        class="hidden flex-col mt-3 space-y-2 md:hidden transform transition-all duration-200 ease-out">
+        <span id="mobile-user-greeting" class="text-zinc-400"></span>
+        <a href="index.html" class="block text-amber-500 hover:text-amber-400 transition-colors">Início</a>
+        <a href="#servicos" class="block text-zinc-300 hover:text-amber-500 transition-colors">Serviços</a>
+        <a href="#sobre" class="block text-zinc-300 hover:text-amber-500 transition-colors">Sobre</a>
+        <a href="ajuda.html" class="block text-zinc-300 hover:text-amber-500 transition-colors">Contato</a>
+        <a href="admin.html" id="mobile-admin-btn" class="hidden block text-zinc-300 hover:text-amber-500 transition-colors">Painel Admin</a>
+        <a href="agendamento.html"
+            class="block bg-amber-500 text-zinc-950 px-6 py-2 rounded-lg font-semibold hover:bg-amber-400 transition-colors text-center">
+            Agendar
+        </a>
+
+        <button id="mobile-logout-btn"
+            class="hidden block text-red-400 hover:text-red-300 transition-colors">Sair</button>
+        <a href="login.html" id="mobile-login-btn"
+            class="block text-zinc-300 hover:text-amber-500 transition-colors">Entrar</a>
+        </div>
+    </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="pt-32 pb-20 px-4">
+        <div class="container mx-auto">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
                 <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
                     Estilo e <span class="text-amber-500">Elegância</span> em Cada Corte
                 </h1>
@@ -279,30 +283,6 @@ onAuthStateChanged(auth, (user) => {
         logoutBtns.forEach(b => b.classList.remove('hidden'));
         loginBtns.forEach(b => b.classList.add('hidden'));
 
-        // Se for o barbeiro, mostra botão de Painel Admin
-        if (user.email === 'ytbgugu979@gmail.com') {
-            // Menu desktop
-            const navDesktop = document.querySelector('nav .md\\:flex');
-            if (navDesktop && !document.getElementById('admin-btn')) {
-                const adminBtn = document.createElement('a');
-                adminBtn.id = 'admin-btn';
-                adminBtn.href = 'admin.html';
-                adminBtn.textContent = 'Painel Admin';
-                adminBtn.className = 'text-amber-500 hover:text-amber-400 font-semibold';
-                navDesktop.appendChild(adminBtn);
-            }
-
-            // Menu mobile
-            const navMobile = document.getElementById('mobile-menu');
-            if (navMobile && !document.getElementById('mobile-admin-btn')) {
-                const adminBtnMobile = document.createElement('a');
-                adminBtnMobile.id = 'mobile-admin-btn';
-                adminBtnMobile.href = 'admin.html';
-                adminBtnMobile.textContent = 'Painel Admin';
-                adminBtnMobile.className = 'block text-amber-500 hover:text-amber-400 font-semibold transition-colors';
-                navMobile.appendChild(adminBtnMobile);
-            }
-        }
     } else {
         greeting.textContent = '';
         mobileGreeting.textContent = '';
@@ -328,12 +308,6 @@ const addLogout = (id) => {
 addLogout('logout-btn');
 addLogout('mobile-logout-btn');
 
-// Toggle menu mobile
-const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-const mobileMenu = document.getElementById('mobile-menu');
-mobileMenuBtn.addEventListener('click', () => {
-    mobileMenu.classList.toggle('hidden');
-});
 </script>
 <script type="module" src="firebase-config.js"></script>
 <script type="module" src="script.js"></script>

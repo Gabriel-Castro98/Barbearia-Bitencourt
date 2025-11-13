@@ -160,17 +160,30 @@ document.addEventListener("DOMContentLoaded", () => {
   initEmailJS();
 
   // MENU HAMBÚRGUER
- const mobileMenuBtn = document.getElementById("mobile-menu-btn");
-if (mobileMenu && mobileMenuBtn) {
-  mobileMenuBtn.addEventListener("click", () => {
-    mobileMenu.classList.toggle("hidden");
+  const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+
+  if (mobileMenu && mobileMenuBtn) {
+    mobileMenuBtn.addEventListener("click", () => {
+      mobileMenu.classList.toggle("hidden");
+    });
+
+    // Fecha o menu ao clicar em um link
+    document.querySelectorAll("#mobile-menu a").forEach(link => {
+      link.addEventListener("click", () => {
+        mobileMenu.classList.add("hidden");
+      });
+    });
+  }
+
+  // LOGOUT (desktop e mobile)
+  ["logout-btn", "logout-btn-mobile"].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.addEventListener("click", async () => {
+      await auth.signOut();
+      window.location.href = "login.html";
+    });
   });
-}
-
-
-  // LOGOUT
-  const logoutBtn = document.getElementById("logout-btn");
-  if (logoutBtn) logoutBtn.addEventListener("click", async () => { await auth.signOut(); window.location.href = "login.html"; });
 
   // FAQ
   document.querySelectorAll(".faq-item").forEach(item => {
@@ -271,5 +284,34 @@ if (mobileMenu && mobileMenuBtn) {
       submitBtn.disabled = false;
     }
   });
+});
+auth.onAuthStateChanged(async (user) => {
+  const adminBtn = document.getElementById("admin-btn");
+  const mobileAdminBtn = document.getElementById("mobile-admin-btn");
+
+  if (!user) {
+    adminBtn?.classList.add("hidden");
+    mobileAdminBtn?.classList.add("hidden");
+    return;
+  }
+
+  try {
+    const userDoc = await getDoc(doc(db, "usuarios", user.uid));
+    console.log("🧾 Dados do usuário:", userDoc.exists() ? userDoc.data() : "Documento não encontrado");
+
+    if (userDoc.exists() && userDoc.data().role === "admin") {
+      adminBtn?.classList.remove("hidden");
+      mobileAdminBtn?.classList.remove("hidden");
+      console.log("✅ Usuário é admin, botão exibido");
+    } else {
+      adminBtn?.classList.add("hidden");
+      mobileAdminBtn?.classList.add("hidden");
+      console.log("🚫 Usuário não é admin");
+    }
+  } catch (err) {
+    console.error("Erro ao verificar admin:", err);
+    adminBtn?.classList.add("hidden");
+    mobileAdminBtn?.classList.add("hidden");
+  }
 });
 

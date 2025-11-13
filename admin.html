@@ -128,22 +128,36 @@
   <script type="module">
     import { auth, db } from "./firebase-config.js";
     import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { collection, query, onSnapshot, doc, updateDoc, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+    import { collection, query, onSnapshot, doc, updateDoc, deleteDoc, orderBy, getDoc } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-    const ADMIN_EMAIL = "ytbgugu979@gmail.com";
     let allBookings = [];
     let currentFilter = "all";
 
-    // 🔒 Proteção silenciosa de acesso
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = "login.html";
-      } else if (user.email !== ADMIN_EMAIL) {
+   // 🔒 Proteção silenciosa baseada em "role"
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "login.html";
+      return;
+    }
+
+    try {
+      const userDocRef = doc(db, "usuarios", user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (!userDocSnap.exists() || userDocSnap.data().role !== "admin") {
+        console.log("🚫 Acesso negado: usuário não é admin.");
         window.location.href = "index.html";
-      } else {
-        loadBookings();
+        return;
       }
-    });
+
+      console.log("✅ Acesso concedido: usuário é admin.");
+      loadBookings(); // Só carrega dados se for admin
+
+    } catch (err) {
+      console.error("Erro ao verificar o role do usuário:", err);
+      window.location.href = "index.html";
+    }
+  });
 
     // 📊 Carregar agendamentos
     function loadBookings() {
@@ -236,22 +250,34 @@
     document.getElementById("search-input").addEventListener("input", renderBookings);
 
     // 🍔 Menu hambúrguer com animação
-    const menuBtn = document.getElementById("menu-btn");
-    const mobileMenu = document.getElementById("mobile-menu");
-    const logoutBtnMobile = document.getElementById("logout-btn-mobile");
+const menuBtn = document.getElementById("menu-btn");
+const mobileMenu = document.getElementById("mobile-menu");
+const logoutBtnMobile = document.getElementById("logout-btn-mobile");
+const logoutBtn = document.getElementById("logout-btn"); // 👈 botão desktop
 
-    menuBtn.addEventListener("click", () => {
-      mobileMenu.classList.toggle("hidden");
-      if (!mobileMenu.classList.contains("hidden")) {
-        mobileMenu.classList.add("animate-fadeIn");
-      }
-    });
+menuBtn.addEventListener("click", () => {
+  mobileMenu.classList.toggle("hidden");
+  if (!mobileMenu.classList.contains("hidden")) {
+    mobileMenu.classList.add("animate-fadeIn");
+  }
+});
 
-    logoutBtnMobile.addEventListener("click", async () => {
-      await signOut(auth);
-      window.location.href = "login.html";
-    });
+// 📱 Logout (mobile)
+if (logoutBtnMobile) {
+  logoutBtnMobile.addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "login.html";
+  });
+}
+
+// 💻 Logout (desktop)
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "login.html";
+  });
+}
+
   </script>
 </body>
 </html>
-

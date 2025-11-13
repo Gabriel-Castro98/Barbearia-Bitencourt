@@ -67,60 +67,70 @@
     </div>
 
     <!-- Firebase + Login Script -->
-    <script type="module">
-        import { auth } from './firebase-config.js';
-        import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js';
+<script type="module">
+    import { auth, db } from './firebase-config.js';
+    import { signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js';
+    import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js';
 
-        const loginForm = document.getElementById('login-form');
-        const loginBtn = document.getElementById('login-btn');
-        const errorMessage = document.getElementById('error-message');
+    const loginForm = document.getElementById('login-form');
+    const loginBtn = document.getElementById('login-btn');
+    const errorMessage = document.getElementById('error-message');
 
-        // ✅ E-mail do barbeiro admin
-        const ADMIN_EMAIL = 'ytbgugu979@gmail.com';
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
 
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
+        // Mostrar "Entrando..."
+        loginBtn.textContent = 'Entrando...';
+        loginBtn.disabled = true;
+        errorMessage.classList.add('hidden');
 
-            // Mostrar "Entrando..."
-            loginBtn.textContent = 'Entrando...';
-            loginBtn.disabled = true;
-            errorMessage.classList.add('hidden');
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
 
-            try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
+            console.log('[LOGIN] Usuário autenticado:', user.email);
 
-                console.log('[LOGIN] Usuário autenticado:', user.email);
+            // Salva o e-mail do usuário logado para uso em outras páginas
+            sessionStorage.setItem('userEmail', email);
 
-                // Salva o e-mail do usuário logado para uso em outras páginas
-                sessionStorage.setItem('userEmail', email);
+            // 🔍 Busca o papel (role) do usuário no Firestore
+            const userDocRef = doc(db, 'usuarios', user.uid);
+            const userDocSnap = await getDoc(userDocRef);
 
-                // Redireciona baseado no e-mail
-                if (email === ADMIN_EMAIL) {
+            if (userDocSnap.exists()) {
+                const userData = userDocSnap.data();
+                console.log('[LOGIN] Dados do usuário:', userData);
+
+                // Redireciona com base no papel do usuário
+                if (userData.role === 'admin') {
                     window.location.href = 'admin.html';
                 } else {
                     window.location.href = 'agendamento.html';
                 }
-
-            } catch (error) {
-                console.error('[LOGIN] Erro:', error);
-
-                let mensagem = 'Erro ao fazer login. Tente novamente.';
-                if (error.code === 'auth/user-not-found') mensagem = 'Usuário não encontrado.';
-                else if (error.code === 'auth/wrong-password') mensagem = 'Senha incorreta.';
-                else if (error.code === 'auth/invalid-email') mensagem = 'E-mail inválido.';
-
-                errorMessage.querySelector('p').textContent = mensagem;
-                errorMessage.classList.remove('hidden');
-                
-                loginBtn.textContent = 'Entrar';
-                loginBtn.disabled = false;
+            } else {
+                console.warn('[LOGIN] Documento do usuário não encontrado.');
+                window.location.href = 'agendamento.html';
             }
-        });
-    </script>
+
+        } catch (error) {
+            console.error('[LOGIN] Erro:', error);
+
+            let mensagem = 'Erro ao fazer login. Tente novamente.';
+            if (error.code === 'auth/user-not-found') mensagem = 'Usuário não encontrado.';
+            else if (error.code === 'auth/wrong-password') mensagem = 'Senha incorreta.';
+            else if (error.code === 'auth/invalid-email') mensagem = 'E-mail inválido.';
+
+            errorMessage.querySelector('p').textContent = mensagem;
+            errorMessage.classList.remove('hidden');
+            
+            loginBtn.textContent = 'Entrar';
+            loginBtn.disabled = false;
+        }
+    });
+</script>
 </body>
 </html>
 
