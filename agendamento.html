@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-zinc-950 text-zinc-50 font-['Poppins']">
-  <!-- Header -->
+  
 <!-- Header -->
 <header class="fixed top-0 left-0 right-0 z-50 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800">
   <nav class="container mx-auto px-4 py-4">
@@ -37,27 +37,35 @@
 
       <!-- Menu desktop -->
       <div class="hidden md:flex items-center gap-8">
-        <span id="user-name" class="text-zinc-400"></span>
+        <span id="user-greeting" class="text-zinc-400"></span>
         <a href="index.html" class="text-zinc-300 hover:text-amber-500 transition-colors">Início</a>
         <a href="index.html#servicos" class="text-zinc-300 hover:text-amber-500 transition-colors">Serviços</a>
         <a href="index.html#sobre" class="text-zinc-300 hover:text-amber-500 transition-colors">Sobre</a>
         <a href="ajuda.html" class="text-zinc-300 hover:text-amber-500 transition-colors">Contato</a>
+        <a id="admin-btn" href="admin.html" class="hidden text-amber-500 hover:text-amber-400 transition-colors">Painel Admin</a>
         <button id="logout-btn" class="text-red-400 hover:text-red-300 transition-colors">Sair</button>
+        
+
       </div>
     </div>
 
     <!-- Menu Mobile -->
-<div id="mobile-menu" class="hidden flex-col mt-3 space-y-2 md:hidden transform transition-all duration-200 ease-out">
-  <a href="index.html" class="block text-zinc-300 hover:text-amber-500 transition-colors">Início</a>
-  <a href="index.html#servicos" class="block text-zinc-300 hover:text-amber-500 transition-colors">Serviços</a>
-  <a href="index.html#sobre" class="block text-zinc-300 hover:text-amber-500 transition-colors">Sobre</a>
-  <a href="ajuda.html" class="block text-zinc-300 hover:text-amber-500 transition-colors">Contato</a>
-  <button id="logout-btn-mobile" class="block text-red-400 hover:text-red-300 transition-colors">Sair</button>
-</div>
+    <div id="mobile-menu" class="hidden flex-col mt-3 space-y-2 md:hidden transform transition-all duration-200 ease-out">
+      <span id="mobile-user-greeting" class="text-zinc-400"></span>
+      <a href="index.html" class="block text-zinc-300 hover:text-amber-500 transition-colors">Início</a>
+      <a href="index.html#servicos" class="block text-zinc-300 hover:text-amber-500 transition-colors">Serviços</a>
+      <a href="index.html#sobre" class="block text-zinc-300 hover:text-amber-500 transition-colors">Sobre</a>
+      <a href="ajuda.html" class="block text-zinc-300 hover:text-amber-500 transition-colors">Contato</a>
+      <p><a id="mobile-admin-btn" href="admin.html" class="hidden text-amber-500 hover:text-amber-400 transition-colors">
+        Painel Admin</a></p>
+      <button id="mobile-logout-btn" class="block text-red-400 hover:text-red-300 transition-colors">Sair</button>
+      <a href="login.html" id="mobile-login-btn"
+            class="block text-zinc-300 hover:text-amber-500 transition-colors">Entrar</a>
+      
+    </div>
 
   </nav>
 </header>
-
 
   <main class="pt-32 pb-20 px-4">
     <div class="container mx-auto max-w-4xl">
@@ -73,29 +81,88 @@
             <h2 class="text-2xl font-bold mb-6">1. Escolha o Serviço</h2>
             <div class="grid md:grid-cols-3 gap-4 mb-8">
               <label class="service-option cursor-pointer">
-                <input type="radio" name="service" value="Corte Clássico" class="hidden" required>
+                <input type="checkbox" name="service" value="Corte" class="hidden">
                 <div class="service-card bg-zinc-800 border-2 border-zinc-700 rounded-xl p-6 hover:border-amber-500 transition-all">
-                  <h3 class="font-bold text-lg mb-2">Corte Clássico</h3>
+                  <h3 class="font-bold text-lg mb-2">Corte</h3>
                   <p class="text-amber-500 text-xl font-bold">R$ 30</p>
                 </div>
               </label>
+
               <label class="service-option cursor-pointer">
-                <input type="radio" name="service" value="Barba Completa" class="hidden" required>
+                <input type="checkbox" name="service" value="Corte e Barba" class="hidden">
                 <div class="service-card bg-zinc-800 border-2 border-zinc-700 rounded-xl p-6 hover:border-amber-500 transition-all">
-                  <h3 class="font-bold text-lg mb-2">Barba Completa</h3>
-                  <p class="text-amber-500 text-xl font-bold">R$ 35</p>
+                  <h3 class="font-bold text-lg mb-2">Corte e Barba <span class="text-sm text-amber-400 font-semibold">POPULAR</span></h3>
+                  <p class="text-amber-500 text-xl font-bold">R$ 60</p>
                 </div>
               </label>
+
               <label class="service-option cursor-pointer">
-                <input type="radio" name="service" value="Combo: Corte + Barba" class="hidden" required>
+                <input type="checkbox" name="service" value="Barba Completa" class="hidden">
                 <div class="service-card bg-zinc-800 border-2 border-zinc-700 rounded-xl p-6 hover:border-amber-500 transition-all">
-                  <h3 class="font-bold text-lg mb-2">Combo: Corte + Barba</h3>
-                  <p class="text-amber-500 text-xl font-bold">R$ 65</p>
+                  <h3 class="font-bold text-lg mb-2">Barba Completa</h3>
+                  <p class="text-amber-500 text-xl font-bold">R$ 40</p>
+                </div>
+              </label>
+
+              <label class="service-option cursor-pointer">
+                <input type="checkbox" name="service" value="Corte + Alisamento" class="hidden">
+                <div class="service-card bg-zinc-800 border-2 border-zinc-700 rounded-xl p-6 hover:border-amber-500 transition-all">
+                  <h3 class="font-bold text-lg mb-2">Corte + Alisamento</h3>
+                  <p class="text-amber-500 text-xl font-bold">R$ 60</p>
+                </div>
+              </label>
+
+              <label class="service-option cursor-pointer">
+                <input type="checkbox" name="service" value="Corte + Barba + Alisamento" class="hidden">
+                <div class="service-card bg-zinc-800 border-2 border-zinc-700 rounded-xl p-6 hover:border-amber-500 transition-all">
+                  <h3 class="font-bold text-lg mb-2">Corte + Barba + Alisamento</h3>
+                  <p class="text-amber-500 text-xl font-bold">R$ 80</p>
+                </div>
+              </label>
+
+              <label class="service-option cursor-pointer">
+                <input type="checkbox" name="service" value="Corte + Barba + Pigmentacao" class="hidden">
+                <div class="service-card bg-zinc-800 border-2 border-zinc-700 rounded-xl p-6 hover:border-amber-500 transition-all">
+                  <h3 class="font-bold text-lg mb-2">Corte + Barba + Pigmentação</h3>
+                  <p class="text-amber-500 text-xl font-bold">R$ 70</p>
+                </div>
+              </label>
+
+              <label class="service-option cursor-pointer">
+                <input type="checkbox" name="service" value="Sobrancelha na Navalha" class="hidden">
+                <div class="service-card bg-zinc-800 border-2 border-zinc-700 rounded-xl p-6 hover:border-amber-500 transition-all">
+                  <h3 class="font-bold text-lg mb-2">Sobrancelha na Navalha</h3>
+                  <p class="text-amber-500 text-xl font-bold">R$ 5</p>
+                </div>
+              </label>
+
+              <label class="service-option cursor-pointer">
+                <input type="checkbox" name="service" value="Bigode na Navalha" class="hidden">
+                <div class="service-card bg-zinc-800 border-2 border-zinc-700 rounded-xl p-6 hover:border-amber-500 transition-all">
+                  <h3 class="font-bold text-lg mb-2">Bigode na Navalha</h3>
+                  <p class="text-amber-500 text-xl font-bold">R$ 5</p>
+                </div>
+              </label>
+
+              <label class="service-option cursor-pointer">
+                <input type="checkbox" name="service" value="Risquinho Simples" class="hidden">
+                <div class="service-card bg-zinc-800 border-2 border-zinc-700 rounded-xl p-6 hover:border-amber-500 transition-all">
+                  <h3 class="font-bold text-lg mb-2">Risquinho Simples</h3>
+                  <p class="text-amber-500 text-xl font-bold">R$ 5</p>
+                </div>
+              </label>
+
+              <label class="service-option cursor-pointer">
+                <input type="checkbox" name="service" value="Bigode e Cavanhaque" class="hidden">
+                <div class="service-card bg-zinc-800 border-2 border-zinc-700 rounded-xl p-6 hover:border-amber-500 transition-all">
+                  <h3 class="font-bold text-lg mb-2">Bigode e Cavanhaque</h3>
+                  <p class="text-amber-500 text-xl font-bold">R$ 10</p>
                 </div>
               </label>
             </div>
             <button type="button" id="next-1" class="w-full bg-amber-500 text-zinc-950 py-3 rounded-lg font-semibold hover:bg-amber-400 transition-colors">Próximo</button>
           </div>
+
 
           <!-- Step 2: Barbeiros -->
           <div id="step-2" class="step hidden">
@@ -153,6 +220,7 @@
                 <p><span class="text-zinc-500">Barbeiro:</span> <span id="summary-barber"></span></p>
                 <p><span class="text-zinc-500">Data:</span> <span id="summary-date"></span></p>
                 <p><span class="text-zinc-500">Horário:</span> <span id="summary-time"></span></p>
+                <p><span class="text-zinc-500">Total:</span> <span id="summary-total"></span></p>
               </div>
             </div>
             <div class="flex gap-4">
@@ -187,6 +255,55 @@
   <script type="module" src="firebase-config.js"></script>
   <!-- Script principal -->
   <script type="module" src="script.js"></script>
+  <script type="module">
+import { auth, db } from "./firebase-config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+
+onAuthStateChanged(auth, async (user) => {
+    const userNameDesktop = document.getElementById("user-name");
+    const logoutDesktop = document.getElementById("logout-btn");
+
+    const logoutMobile = document.getElementById("logout-btn-mobile");
+
+    const adminBtn = document.getElementById("admin-btn");
+    const mobileAdminBtn = document.getElementById("mobile-admin-btn");
+
+    if (user) {
+        const nome = user.displayName || "Cliente";
+        if (userNameDesktop) userNameDesktop.textContent = `Olá, ${nome}`;
+
+        if (logoutDesktop) logoutDesktop.classList.remove("hidden");
+        if (logoutMobile) logoutMobile.classList.remove("hidden");
+
+        try {
+            const ref = doc(db, "usuarios", user.uid);
+            const snap = await getDoc(ref);
+
+            const isAdmin = snap.exists() && snap.data().role === "admin";
+
+            if (isAdmin) {
+                adminBtn?.classList.remove("hidden");
+                mobileAdminBtn?.classList.remove("hidden");
+            } else {
+                adminBtn?.classList.add("hidden");
+                mobileAdminBtn?.classList.add("hidden");
+            }
+        } catch (error) {
+            console.error("Erro ao verificar admin:", error);
+        }
+
+    } else {
+        if (userNameDesktop) userNameDesktop.textContent = "";
+        if (logoutDesktop) logoutDesktop.classList.add("hidden");
+        if (logoutMobile) logoutMobile.classList.add("hidden");
+
+        adminBtn?.classList.add("hidden");
+        mobileAdminBtn?.classList.add("hidden");
+    }
+});
+</script>
+
 </body>
 </html>
   

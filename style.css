@@ -12,25 +12,6 @@
   background-color: rgba(245, 158, 11, 0.1);
 }
 
-/* Filter buttons */
-.filter-btn {
-  background-color: rgb(39 39 42);
-  color: rgb(161 161 170);
-}
-
-.filter-btn.active {
-  background-color: rgb(245 158 11);
-  color: rgb(24 24 27);
-}
-
-.filter-btn:hover {
-  background-color: rgb(63 63 70);
-}
-
-.filter-btn.active:hover {
-  background-color: rgb(251 191 36);
-}
-
 /* Smooth transitions */
 * {
   transition-property: color, background-color, border-color;
@@ -149,3 +130,58 @@
   100% { opacity: 1; transform: translateY(0); }
 }
 
+/* Carrossel de serviços - Agendamento */
+#carousel-servicos {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 1rem;
+}
+
+#carousel-servicos::-webkit-scrollbar {
+  height: 6px;
+}
+
+#carousel-servicos::-webkit-scrollbar-thumb {
+  background-color: rgba(250, 204, 21, 0.6);
+  border-radius: 3px;
+}
+
+.service-card {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  min-width: 220px;
+  border: 2px solid #27272a;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  background-color: #1f1f23;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.service-card:hover {
+  border-color: #facc15;
+  transform: scale(1.05);
+  background-color: rgba(250, 204, 21, 0.1);
+}
+
+/* Quando selecionado (radio checked) */
+.service-option input:checked + .service-card {
+  border-color: #facc15;
+  background-color: rgba(250, 204, 21, 0.2);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  #carousel-servicos {
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .service-card {
+    min-width: 180px;
+    padding: 1rem;
+  }
+}

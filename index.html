@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-<head>
+</head>
     <body class="bg-zinc-950 text-zinc-50 font-['Poppins']">
         <!-- Header -->
     <header class="fixed top-0 left-0 right-0 z-50 bg-zinc-950/95 backdrop-blur-sm border-b border-zinc-800">
@@ -47,7 +47,6 @@
             class="bg-amber-500 text-zinc-950 px-6 py-2 rounded-lg font-semibold hover:bg-amber-400 transition-colors">
             Agendar</a>
             <a href="admin.html" id="admin-btn" class="hidden text-zinc-300 hover:text-amber-500 transition-colors">Painel Admin</a>
-
             <button id="logout-btn" class="hidden text-red-400 hover:text-red-300 transition-colors">Sair</button>
             <a href="login.html" id="login-btn" class="text-zinc-300 hover:text-amber-500 transition-colors">Entrar</a>
 
@@ -65,27 +64,25 @@
         <a href="admin.html" id="mobile-admin-btn" class="hidden block text-zinc-300 hover:text-amber-500 transition-colors">Painel Admin</a>
         <a href="agendamento.html"
             class="block bg-amber-500 text-zinc-950 px-6 py-2 rounded-lg font-semibold hover:bg-amber-400 transition-colors text-center">
-            Agendar
-        </a>
-
-        <button id="mobile-logout-btn"
-            class="hidden block text-red-400 hover:text-red-300 transition-colors">Sair</button>
+            Agendar</a>
+        <button id="mobile-logout-btn" class="hidden block text-red-400 hover:text-red-300 transition-colors">Sair</button>
         <a href="login.html" id="mobile-login-btn"
             class="block text-zinc-300 hover:text-amber-500 transition-colors">Entrar</a>
         </div>
     </nav>
     </header>
 
-    <!-- Hero Section -->
-    <section class="pt-32 pb-20 px-4">
-        <div class="container mx-auto">
-            <div class="grid md:grid-cols-2 gap-12 items-center">
-                <div>
+   <!-- Hero Section -->
+<section class="pt-32 pb-52 px-4">
+    <div class="container mx-auto">
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+            <div>
                 <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
                     Estilo e <span class="text-amber-500">Elegância</span> em Cada Corte
                 </h1>
                 <p class="text-xl text-zinc-400 mb-8">
-                    Experimente o melhor em cuidados masculinos com nossos barbeiros especializados. Tradição e modernidade em um só lugar.
+                    Experimente o melhor em cuidados masculinos com nossos barbeiros especializados.
+                    Tradição e modernidade em um só lugar.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4">
                     <a href="agendamento.html" class="bg-amber-500 text-zinc-950 px-8 py-4 rounded-lg font-semibold hover:bg-amber-400 transition-colors text-center">
@@ -96,78 +93,43 @@
                     </a>
                 </div>
             </div>
+
             <div class="relative">
-                <img src="logo-barbearia-bitencourt.png"  width="550" height="550" alt="Barbearia Bitencourt" class="rounded-2xl shadow-2xl">
+                <img src="logo-barbearia-bitencourt.png" width="550" height="550" alt="Barbearia Bitencourt" class="rounded-2xl shadow-2xl">
             </div>
         </div>
     </div>
 </section>
 
 <!-- Services Section -->
-<section id="servicos" class="py-20 px-4 bg-zinc-900">
-    <div class="container mx-auto">
-        <div class="text-center mb-16">
-            <h2 class="text-4xl font-bold mb-4">Nossos <span class="text-amber-500">Serviços</span></h2>
-            <p class="text-xl text-zinc-400">Escolha o serviço perfeito para você</p>
+<section id="servicos" class="py-20 px-4 bg-zinc-900 relative">
+
+        <div class="text-center mb-16 overflow-visible relative z-0">
+            <h2 class="text-4xl font-bold mb-4">
+                Nossos <span class="text-amber-500">Serviços</span>
+            </h2>
+            <p class="text-xl text-zinc-400">
+                Escolha o serviço perfeito para você
+            </p>
         </div>
 
-        <div class="grid md:grid-cols-3 gap-8">
-            <!-- Corte Clássico -->
-            <div class="bg-zinc-800 rounded-2xl p-8 border border-zinc-700 hover:border-amber-500 transition-all">
-                <div class="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mb-6">
-                    <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-2xl font-bold mb-2">Corte Clássico</h3>
-                <p class="text-zinc-400 mb-6">Corte tradicional com acabamento impecável</p>
-                <div class="text-3xl font-bold text-amber-500 mb-6">R$ 30</div>
-                <ul class="space-y-3 mb-8">
-                    <li class="flex items-center gap-2 text-zinc-300">Lavagem e hidratação</li>
-                    <li class="flex items-center gap-2 text-zinc-300">Finalização com produtos premium</li>
-                    <li class="flex items-center gap-2 text-zinc-300">Duração: 30 minutos</li>
-                </ul>
-                <a href="agendamento.html" class="block w-full bg-zinc-700 text-center py-3 rounded-lg font-semibold hover:bg-amber-500 hover:text-zinc-950 transition-colors">Agendar</a>
+        <!-- Carrossel com botões -->
+        <div class="relative overflow-visible">
+
+            <button id="prev-servico"
+                class="absolute left-0 top-1/2 -translate-y-1/2 z-40 bg-zinc-800/70 hover:bg-zinc-800/90 text-amber-500 p-3 rounded-full shadow-lg">
+                &#10094;
+            </button>
+
+            <div id="carousel-servicos" class="flex overflow-x-auto gap-6 snap-x snap-mandatory scrollbar-hide px-2">
+                <!-- Cards são adicionados por JS -->
             </div>
 
-            <!-- Combo: Corte + Barba (POPULAR) -->
-            <div class="bg-zinc-800 rounded-2xl p-8 border-2 border-amber-500 relative">
-                <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-amber-500 text-zinc-950 px-4 py-1 rounded-full text-sm font-bold">
-                    POPULAR
-                </div>
-                <div class="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mb-6">
-                    <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-2xl font-bold mb-2">Combo: Corte + Barba</h3>
-                <p class="text-zinc-400 mb-6">Experiência completa de cuidados masculinos</p>
-                <div class="text-3xl font-bold text-amber-500 mb-6">R$ 65</div>
-                <ul class="space-y-3 mb-8">
-                    <li class="flex items-center gap-2 text-zinc-300">Corte + Barba</li>
-                    <li class="flex items-center gap-2 text-zinc-300">Tratamento facial</li>
-                    <li class="flex items-center gap-2 text-zinc-300">Duração: 60 minutos</li>
-                </ul>
-                <a href="agendamento.html" class="block w-full bg-amber-500 text-zinc-950 text-center py-3 rounded-lg font-semibold hover:bg-amber-400 transition-colors">Agendar</a>
-            </div>
+            <button id="next-servico"
+                class="absolute right-0 top-1/2 -translate-y-1/2 z-40 bg-zinc-800/70 hover:bg-zinc-800/90 text-amber-500 p-3 rounded-full shadow-lg">
+                &#10095;
+            </button>
 
-            <!-- Barba Completa -->
-            <div class="bg-zinc-800 rounded-2xl p-8 border border-zinc-700 hover:border-amber-500 transition-all">
-                <div class="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mb-6">
-                    <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-2xl font-bold mb-2">Barba Completa</h3>
-                <p class="text-zinc-400 mb-6">Aparar, modelar e finalizar com toalha quente</p>
-                <div class="text-3xl font-bold text-amber-500 mb-6">R$ 35</div>
-                <ul class="space-y-3 mb-8">
-                    <li class="flex items-center gap-2 text-zinc-300">Toalha quente</li>
-                    <li class="flex items-center gap-2 text-zinc-300">Produtos de alta qualidade</li>
-                    <li class="flex items-center gap-2 text-zinc-300">Duração: 30 minutos</li>
-                </ul>
-                <a href="agendamento.html" class="block w-full bg-zinc-700 text-center py-3 rounded-lg font-semibold hover:bg-amber-500 hover:text-zinc-950 transition-colors">Agendar</a>
-            </div>
         </div>
     </div>
 </section>
@@ -264,6 +226,8 @@
     </div>
 </footer>   
 
+<script type="module" src="firebase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 <script type="module">
 import { auth } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js';
@@ -309,7 +273,69 @@ addLogout('logout-btn');
 addLogout('mobile-logout-btn');
 
 </script>
-<script type="module" src="firebase-config.js"></script>
+<script type="module">
+import { auth, db } from "./firebase-config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
+
+// Controle de login e mensagens
+onAuthStateChanged(auth, async (user) => {
+    const greeting = document.getElementById('user-greeting');
+    const mobileGreeting = document.getElementById('mobile-user-greeting');
+    const logoutBtns = [document.getElementById('logout-btn'), document.getElementById('mobile-logout-btn')];
+    const loginBtns = [document.getElementById('login-btn'), document.getElementById('mobile-login-btn')];
+
+    const adminBtn = document.getElementById("admin-btn");
+    const mobileAdminBtn = document.getElementById("mobile-admin-btn");
+
+    if (user) {
+        const nome = user.displayName || "Cliente";
+
+        greeting.textContent = `Olá, ${nome}`;
+        mobileGreeting.textContent = `Olá, ${nome}`;
+
+        logoutBtns.forEach(b => b.classList.remove("hidden"));
+        loginBtns.forEach(b => b.classList.add("hidden"));
+
+        // ======= VERIFICA SE É ADMIN =======
+        try {
+            const ref = doc(db, "usuarios", user.uid);
+            const snap = await getDoc(ref);
+
+            if (snap.exists() && snap.data().role === "admin") {
+                adminBtn?.classList.remove("hidden");
+                mobileAdminBtn?.classList.remove("hidden");
+            } else {
+                adminBtn?.classList.add("hidden");
+                mobileAdminBtn?.classList.add("hidden");
+            }
+        } catch (err) {
+            console.error("Erro ao verificar admin:", err);
+        }
+
+    } else {
+        greeting.textContent = "";
+        mobileGreeting.textContent = "";
+        logoutBtns.forEach(b => b.classList.add("hidden"));
+        loginBtns.forEach(b => b.classList.remove("hidden"));
+
+        adminBtn?.classList.add("hidden");
+        mobileAdminBtn?.classList.add("hidden");
+    }
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const menuBtn = document.getElementById("mobile-menu-btn");
+    const mobileMenu = document.getElementById("mobile-menu");
+
+    if (menuBtn && mobileMenu) {
+        menuBtn.addEventListener("click", () => {
+            mobileMenu.classList.toggle("hidden");
+        });
+    }
+});
+</script>
 <script type="module" src="script.js"></script>
 </body>
 </html>
