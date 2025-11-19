@@ -3,7 +3,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Painel Admin - Barbearia Bitencourt</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<link href="dist/output.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 <style>
 body { font-family: 'Poppins', sans-serif; }
@@ -24,6 +24,8 @@ to { opacity: 1; transform: translateY(0); }
 
 <!-- Flatpickr JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-zinc-950 text-zinc-50">
@@ -58,105 +60,173 @@ to { opacity: 1; transform: translateY(0); }
 </nav>
 </header>
 
-
 <main class="flex-1 p-6 space-y-6">
-<div id="estatisticas" class="grid md:grid-cols-4 gap-6">
-<div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800"><h3 class="text-zinc-400 text-sm mb-2">Hoje</h3><p id="stat-today" class="text-3xl font-bold">0</p></div>
-<div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800"><h3 class="text-zinc-400 text-sm mb-2">Confirmados</h3><p id="stat-confirmed" class="text-3xl font-bold">0</p></div>
-<div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800"><h3 class="text-zinc-400 text-sm mb-2">Total</h3><p id="stat-total" class="text-3xl font-bold">0</p></div>
-</div>
-
-
-<div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-4">
-
-
-<div class="flex flex-wrap gap-3">
-<button onclick="setDateFilter('all', event)" class="date-btn bg-zinc-800 px-4 py-2 rounded transition">Todos</button>
-<button onclick="setDateFilter('today', event)" class="date-btn bg-zinc-800 px-4 py-2 rounded">Hoje</button>
-<button onclick="setDateFilter('tomorrow', event)" class="date-btn bg-zinc-800 px-4 py-2 rounded">Amanhã</button>
-<button onclick="setDateFilter('week', event)" class="date-btn bg-zinc-800 px-4 py-2 rounded">Semana</button>
-<button onclick="setDateFilter('month', event)" class="date-btn bg-zinc-800 px-4 py-2 rounded">Mês</button>
-
-
-<input type="text" id="start-range" class="bg-zinc-800 px-3 py-2 rounded" placeholder="Início">
-<input type="text" id="end-range" class="bg-zinc-800 px-3 py-2 rounded" placeholder="Fim">
-<button onclick="applyCustomRange()" class="bg-amber-500 text-black px-4 py-2 rounded">Filtrar</button>
-</div>
-
-
-<div class="flex flex-wrap gap-3 items-center mt-2">
-<button onclick="filterBookings('all', event)" class="filter-btn filter-active px-4 py-2 rounded">Todos</button>
-<button onclick="filterBookings('confirmado', event)" class="filter-btn bg-zinc-800 px-4 py-2 rounded">Confirmados</button>
-<button onclick="filterBookings('concluido', event)" class="filter-btn bg-zinc-800 px-4 py-2 rounded">Concluídos</button>
-
-
-<button onclick="setSort('newest', event)" class="sort-btn bg-zinc-800 px-4 py-2 rounded">⬆️ Mais novos</button>
-<button onclick="setSort('oldest', event)" class="sort-btn bg-zinc-800 px-4 py-2 rounded">⬇️ Mais antigos</button>
-
-
-<input type="text" id="search-input" placeholder="Buscar por nome, data ou serviço..." class="flex-1 min-w-[250px] bg-zinc-800 border border-zinc-700 rounded px-4 py-2">
-</div>
-</div>
-
-<!-- NOVAS MÉTRICAS -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-
-  <div class="stat-card">
-    <p class="text-zinc-400 text-sm">Faturamento</p>
-    <p id="stat-revenue" class="text-2xl font-bold mt-1">R$ 0</p>
+  <!-- ESTATÍSTICAS -->
+  <div id="estatisticas" class="grid md:grid-cols-4 gap-6">
+    <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
+      <h3 class="text-zinc-400 text-sm mb-2">Hoje</h3>
+      <p id="stat-today" class="text-3xl font-bold">0</p>
+    </div>
+    <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
+      <h3 class="text-zinc-400 text-sm mb-2">Confirmados</h3>
+      <p id="stat-confirmed" class="text-3xl font-bold">0</p>
+    </div>
+    <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
+      <h3 class="text-zinc-400 text-sm mb-2">Total</h3>
+      <p id="stat-total" class="text-3xl font-bold">0</p>
+    </div>
   </div>
 
-  <div class="stat-card">
-    <p class="text-zinc-400 text-sm">Ticket Médio</p>
-    <p id="stat-ticket" class="text-2xl font-bold mt-1">R$ 0</p>
+  <!-- FILTROS -->
+  <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-4">
+    <div class="flex flex-wrap gap-3">
+      <button onclick="setDateFilter('all', event)" class="date-btn bg-zinc-800 px-4 py-2 rounded transition">Todos</button>
+      <button onclick="setDateFilter('today', event)" class="date-btn bg-zinc-800 px-4 py-2 rounded">Hoje</button>
+      <button onclick="setDateFilter('tomorrow', event)" class="date-btn bg-zinc-800 px-4 py-2 rounded">Amanhã</button>
+      <button onclick="setDateFilter('week', event)" class="date-btn bg-zinc-800 px-4 py-2 rounded">Semana</button>
+      <button onclick="setDateFilter('month', event)" class="date-btn bg-zinc-800 px-4 py-2 rounded">Mês</button>
+
+      <input type="text" id="start-range" class="bg-zinc-800 px-3 py-2 rounded" placeholder="Início">
+      <input type="text" id="end-range" class="bg-zinc-800 px-3 py-2 rounded" placeholder="Fim">
+      <button onclick="applyCustomRange()" class="bg-amber-500 text-black px-4 py-2 rounded">Filtrar</button>
+    </div>
+
+    <div class="flex flex-wrap gap-3 items-center mt-2">
+      <button onclick="filterBookings('all', event)" class="filter-btn filter-active px-4 py-2 rounded">Todos</button>
+      <button onclick="filterBookings('confirmado', event)" class="filter-btn bg-zinc-800 px-4 py-2 rounded">Confirmados</button>
+      <button onclick="filterBookings('concluido', event)" class="filter-btn bg-zinc-800 px-4 py-2 rounded">Concluídos</button>
+
+      <button onclick="setSort('newest', event)" class="sort-btn bg-zinc-800 px-4 py-2 rounded">⬆️ Mais novos</button>
+      <button onclick="setSort('oldest', event)" class="sort-btn bg-zinc-800 px-4 py-2 rounded">⬇️ Mais antigos</button>
+
+      <input type="text" id="search-input" placeholder="Buscar por nome, data ou serviço..." class="flex-1 min-w-[250px] bg-zinc-800 border border-zinc-700 rounded px-4 py-2">
+    </div>
   </div>
 
-  <div class="stat-card">
-    <p class="text-zinc-400 text-sm">Clientes Únicos</p>
-    <p id="stat-clients" class="text-2xl font-bold mt-1">0</p>
+  <!-- AGENDAMENTOS (moved acima das métricas e gráficos) -->
+  <section id="agendamentos" class="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+    <div class="p-6 border-b border-zinc-800"><h2 class="text-xl font-bold">Agendamentos em Tempo Real</h2></div>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-zinc-800/50">
+          <tr>
+            <th class="px-6 py-4 text-left text-sm">Cliente</th>
+            <th class="px-6 py-4 text-left text-sm">Serviço</th>
+            <th class="px-6 py-4 text-left text-sm">Barbeiro</th>
+            <th class="px-6 py-4 text-left text-sm">Data/Hora</th>
+            <th class="px-6 py-4 text-left text-sm">Telefone</th>
+            <th class="px-6 py-4 text-left text-sm">Status</th>
+            <th class="px-6 py-4 text-left text-sm">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="bookings-table" class="divide-y divide-zinc-800">
+          <tr><td colspan="7" class="px-6 py-8 text-center text-zinc-500">Carregando agendamentos...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- NOVAS MÉTRICAS -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+    <div class="stat-card">
+      <p class="text-zinc-400 text-sm">Faturamento</p>
+      <p id="stat-revenue" class="text-2xl font-bold mt-1">R$ 0</p>
+    </div>
+    <div class="stat-card">
+      <p class="text-zinc-400 text-sm">Ticket Médio</p>
+      <p id="stat-ticket" class="text-2xl font-bold mt-1">R$ 0</p>
+    </div>
+    <div class="stat-card">
+      <p class="text-zinc-400 text-sm">Clientes Únicos</p>
+      <p id="stat-clients" class="text-2xl font-bold mt-1">0</p>
+    </div>
+    <div class="stat-card">
+      <p class="text-zinc-400 text-sm">Serviço mais agendado</p>
+      <p id="stat-top-service" class="text-xl font-semibold mt-1">—</p>
+    </div>
+    <div class="stat-card">
+      <p class="text-zinc-400 text-sm">Horário mais movimentado</p>
+      <p id="stat-top-hour" class="text-xl font-semibold mt-1">—</p>
+    </div>
   </div>
 
-  <div class="stat-card">
-    <p class="text-zinc-400 text-sm">Serviço mais agendado</p>
-    <p id="stat-top-service" class="text-xl font-semibold mt-1">—</p>
+ <!-- GRÁFICOS DASHBOARD MASTER -->
+<div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-6 mt-6">
+  <h2 class="text-xl font-bold text-zinc-100 mb-4">Gráficos de Agendamentos</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Gráfico 1: Agendamentos por dia -->
+    <div class="bg-zinc-800 p-3 rounded-xl h-[180px] md:h-[250px]">
+      <h3 class="text-zinc-300 font-semibold mb-1 text-sm md:text-base">Agendamentos por Dia</h3>
+      <canvas id="chart-agendamentos-dia"></canvas>
+    </div>
+
+    <!-- Gráfico 2: Serviços mais populares -->
+    <div class="bg-zinc-800 p-3 rounded-xl h-[180px] md:h-[250px]">
+      <h3 class="text-zinc-300 font-semibold mb-1 text-sm md:text-base">Serviços Mais Populares</h3>
+      <canvas id="chart-servicos-populares"></canvas>
+    </div>
+
+    <!-- Gráfico 3: Cancelamentos este mês -->
+    <div class="bg-zinc-800 p-3 rounded-xl h-[180px] md:h-[250px]">
+      <h3 class="text-zinc-300 font-semibold mb-1 text-sm md:text-base">Cancelamentos Este Mês</h3>
+      <canvas id="chart-cancelamentos"></canvas>
+    </div>
+
+    <!-- Gráfico 4: Clientes VIP -->
+    <div class="bg-zinc-800 p-3 rounded-xl h-[180px] md:h-[250px]">
+      <h3 class="text-zinc-300 font-semibold mb-1 text-sm md:text-base">Clientes VIP</h3>
+      <canvas id="chart-clientes-vip"></canvas>
+    </div>
   </div>
 
-  <div class="stat-card">
-    <p class="text-zinc-400 text-sm">Horário mais movimentado</p>
-    <p id="stat-top-hour" class="text-xl font-semibold mt-1">—</p>
+  <!-- Gráfico de faturamento full width -->
+  <div class="bg-zinc-800 p-4 rounded-xl mt-4 h-[180px] md:h-[250px]">
+    <h3 class="text-zinc-300 font-semibold mb-2 text-sm md:text-base">Faturamento Últimos 30 Dias</h3>
+    <canvas id="chart-faturamento"></canvas>
   </div>
-
 </div>
+<!-- RELATÓRIO DE CLIENTES -->
+<section id="relatorio-clientes" class="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden mt-6">
+  <div class="p-6 border-b border-zinc-800">
+    <h2 class="text-xl font-bold">Relatório de Clientes</h2>
+  </div>
 
-<style>
-.stat-card {
-  @apply bg-zinc-800 border border-zinc-700 rounded-xl p-4;
-}
-</style>
+  <div class="overflow-x-auto p-6 space-y-4">
+    <!-- Filtros -->
+    <div class="flex flex-wrap gap-3 mb-4">
+      <input type="text" id="search-client" placeholder="Buscar por nome ou telefone..." class="flex-1 min-w-[250px] bg-zinc-800 border border-zinc-700 rounded px-4 py-2">
+      <button onclick="filterClients()" class="bg-amber-500 text-black px-4 py-2 rounded">Filtrar</button>
+    </div>
 
-<section id="agendamentos" class="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
-<div class="p-6 border-b border-zinc-800"><h2 class="text-xl font-bold">Agendamentos em Tempo Real</h2></div>
-<div class="overflow-x-auto">
-<table class="w-full">
-<thead class="bg-zinc-800/50">
-<tr>
-<th class="px-6 py-4 text-left text-sm">Cliente</th>
-<th class="px-6 py-4 text-left text-sm">Serviço</th>
-<th class="px-6 py-4 text-left text-sm">Barbeiro</th>
-<th class="px-6 py-4 text-left text-sm">Data/Hora</th>
-<th class="px-6 py-4 text-left text-sm">Telefone</th>
-<th class="px-6 py-4 text-left text-sm">Status</th>
-<th class="px-6 py-4 text-left text-sm">Ações</th>
-</tr>
-</thead>
-<tbody id="bookings-table" class="divide-y divide-zinc-800">
-<tr><td colspan="7" class="px-6 py-8 text-center text-zinc-500">Carregando agendamentos...</td></tr>
-</tbody>
-</table>
-</div>
+    <!-- Tabela de clientes -->
+    <table class="w-full">
+      <thead class="bg-zinc-800/50">
+        <tr>
+          <th class="px-6 py-3 text-left text-sm">Cliente</th>
+          <th class="px-6 py-3 text-left text-sm">Última Visita</th>
+          <th class="px-6 py-3 text-left text-sm">Visitas este Mês</th>
+          <th class="px-6 py-3 text-left text-sm">Visitas este Ano</th>
+          <th class="px-6 py-3 text-left text-sm">Total Gasto</th>
+          <th class="px-6 py-3 text-left text-sm">Serviços Preferidos</th>
+          <th class="px-6 py-3 text-left text-sm">Ações</th>
+        </tr>
+      </thead>
+      <tbody id="clients-table" class="divide-y divide-zinc-800">
+        <tr><td colspan="7" class="px-6 py-8 text-center text-zinc-500">Carregando clientes...</td></tr>
+      </tbody>
+    </table>
+
+    <!-- Ranking clientes mais fiéis -->
+    <div class="mt-6">
+      <h3 class="text-zinc-300 font-semibold mb-2">Ranking Clientes Mais Fiéis</h3>
+      <ol id="ranking-clientes" class="list-decimal list-inside space-y-1 text-zinc-200">
+        <li>Carregando ranking...</li>
+      </ol>
+    </div>
+  </div>
 </section>
 </main>
-
 
 <footer class="bg-zinc-900 py-12 text-center text-zinc-400 mt-20">
 <p>&copy; 2025 Barbearia Bitencourt. Todos os direitos reservados.</p>
@@ -607,6 +677,275 @@ to { opacity: 1; transform: translateY(0); }
         window.location.href = "login.html";
       });
     }
+    // Função para atualizar gráficos
+function atualizarGraficos() {
+  const bookingsFiltered = applyDateFilter(allBookings);
+
+  // ===============================
+  // 1) 📊 AGENDAMENTOS POR DIA
+  // ===============================
+  const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const contagemDias = [0,0,0,0,0,0,0];
+
+  bookingsFiltered.forEach(b => {
+    const d = toDate(b.data);
+    if (d) contagemDias[d.getDay()]++;
+  });
+
+  new Chart(document.getElementById('chart-agendamentos-dia'), {
+    type: 'bar',
+    data: {
+      labels: dias,
+      datasets: [{
+        label: 'Agendamentos',
+        data: contagemDias,
+        backgroundColor: '#f59e0b'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  // ===============================
+  // 2) 🧩 SERVIÇOS MAIS POPULARES
+  // ===============================
+  const contagemServicos = {};
+  bookingsFiltered.forEach(b => {
+    if (!b.servico) return;
+
+    if (Array.isArray(b.servico)) {
+      b.servico.forEach(s => contagemServicos[s] = (contagemServicos[s] || 0)+1);
+    } else {
+      contagemServicos[b.servico] = (contagemServicos[b.servico] || 0)+1;
+    }
+  });
+
+  new Chart(document.getElementById('chart-servicos-populares'), {
+    type: 'pie',
+    data: {
+      labels: Object.keys(contagemServicos),
+      datasets: [{
+        data: Object.values(contagemServicos),
+        backgroundColor: [
+          '#f59e0b','#10b981','#3b82f6','#ef4444',
+          '#8b5cf6','#06b6d4','#f472b6','#facc15'
+        ]
+      }]
+    },
+    options: { responsive: true }
+  });
+
+  // ===============================
+  // 3) 💰 FATURAMENTO 30 DIAS
+  // ===============================
+  const today = new Date();
+  const datasUltimos30 = Array.from({length:30}, (_,i)=>{
+    const d = new Date(today);
+    d.setDate(today.getDate()-29+i);
+    return d.toISOString().split('T')[0];
+  });
+
+  const faturamento = datasUltimos30.map(dStr => {
+    return bookingsFiltered.reduce((acc,b)=>{
+      const bData = toDate(b.data);
+      if (!bData) return acc;
+
+      const bStr = bData.toISOString().split("T")[0];
+      if (bStr !== dStr) return acc;
+
+      if (!b.servico) return acc;
+
+      let val = 0;
+      if (Array.isArray(b.servico)) {
+        b.servico.forEach(s=>{
+          const serv = servicos.find(x=>x.nome===s);
+          if (serv) val+=serv.preco;
+        });
+      } else {
+        const serv = servicos.find(x=>x.nome===b.servico);
+        if (serv) val+=serv.preco;
+      }
+
+      return acc + val;
+    },0);
+  });
+
+  new Chart(document.getElementById('chart-faturamento'), {
+    type:'line',
+    data:{
+      labels: datasUltimos30.map(d=>d.split('-').reverse().join('/')),
+      datasets:[{
+        label:'Faturamento (R$)',
+        data:faturamento,
+        borderColor:'#f59e0b',
+        backgroundColor:'rgba(245,158,11,0.2)',
+        fill:true,
+        tension:0.3
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true}}
+    }
+  });
+
+  // ===============================
+  // 4) ❌ CANCELAMENTOS POR MÊS
+  // ===============================
+  const meses = [
+    "Jan","Fev","Mar","Abr","Mai","Jun",
+    "Jul","Ago","Set","Out","Nov","Dez"
+  ];
+
+  const cancelamentosMes = Array(12).fill(0);
+
+  allBookings.forEach(b => {
+    if (b.status === "cancelado") {
+      const d = toDate(b.data);
+      if (d) cancelamentosMes[d.getMonth()]++;
+    }
+  });
+
+  new Chart(document.getElementById("chart-cancelamentos"), {
+    type: "bar",
+    data: {
+      labels: meses,
+      datasets: [{
+        label: "Cancelamentos",
+        data: cancelamentosMes,
+        backgroundColor: "#ef4444"
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+
+  // ===============================
+  // 5) 👑 CLIENTES VIP (PLACEHOLDER)
+  // ===============================
+  // → Quando você implementar assinaturas VIP,
+  //   só preencher "vipLabels" e "vipValues".
+
+  const vipLabels = ["Dia","Semana","Mês"]; // TEMPORÁRIO
+  const vipValues = [3, 12, 25];            // TEMPORÁRIO
+
+  new Chart(document.getElementById("chart-clientes-vip"), {
+    type: "doughnut",
+    data: {
+      labels: vipLabels,
+      datasets: [{
+        data: vipValues,
+        backgroundColor: ["#10b981","#3b82f6","#f59e0b"]
+      }]
+    },
+    options: { responsive: true }
+  });
+}
+
+// 📋 RELATÓRIO DE CLIENTES (CORRIGIDO)
+function gerarRelatorioClientes() {
+  const clientesMap = {};
+
+  allBookings.forEach(b => {
+    if (!b.email) return;
+
+    if (!clientesMap[b.email]) {
+      clientesMap[b.email] = {
+        nome: b.nome || "-",
+        email: b.email,
+        telefone: b.telefone || "-",
+        totalGasto: 0,
+        visitas: [],
+        frequenciaMes: {},
+        frequenciaAno: {},
+        servicos: {}
+      };
+    }
+
+    const cliente = clientesMap[b.email];
+
+    const data = toDate(b.data);
+    if (!data) return;
+    cliente.visitas.push(data);
+
+    const mesAno = `${data.getMonth()+1}/${data.getFullYear()}`;
+    const ano = data.getFullYear();
+    cliente.frequenciaMes[mesAno] = (cliente.frequenciaMes[mesAno] || 0) + 1;
+    cliente.frequenciaAno[ano] = (cliente.frequenciaAno[ano] || 0) + 1;
+
+    if (b.servico) {
+      if (Array.isArray(b.servico)) {
+        b.servico.forEach(s => {
+          const serv = servicos.find(x => x.nome === s);
+          if (serv) {
+            cliente.totalGasto += serv.preco;
+            cliente.servicos[s] = (cliente.servicos[s] || 0) + 1;
+          }
+        });
+      } else {
+        const serv = servicos.find(x => x.nome === b.servico);
+        if (serv) {
+          cliente.totalGasto += serv.preco;
+          cliente.servicos[b.servico] = (cliente.servicos[b.servico] || 0) + 1;
+        }
+      }
+    }
+  });
+
+  const clientesOrdenados = Object.values(clientesMap)
+    .sort((a,b) => b.visitas.length - a.visitas.length);
+
+  // === ATUALIZA TABELA DE CLIENTES ===
+  const tabela = document.getElementById("clients-table");
+  tabela.innerHTML = clientesOrdenados.map(c => {
+    const servicoPreferido = Object.entries(c.servicos).sort((a,b)=>b[1]-a[1])[0]?.[0] || "-";
+    const ultimaVisita = c.visitas.length ? c.visitas.reduce((a,b)=>a>b?a:b) : "-";
+
+    return `
+      <tr class="hover:bg-zinc-800/50 transition">
+        <td class="px-4 py-2">${c.nome}</td>
+        <td class="px-4 py-2">${ultimaVisita instanceof Date ? ultimaVisita.toLocaleDateString("pt-BR") : "-"}</td>
+        <td class="px-4 py-2">${Object.values(c.frequenciaMes)[0] || 0}</td>
+        <td class="px-4 py-2">${Object.values(c.frequenciaAno)[0] || 0}</td>
+        <td class="px-4 py-2">R$ ${c.totalGasto.toFixed(2)}</td>
+        <td class="px-4 py-2">${servicoPreferido}</td>
+        <td class="px-4 py-2">
+          <a href="https://wa.me/${c.telefone.replace(/\D/g,'')}"
+             target="_blank"
+             class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 text-sm">
+             WhatsApp
+          </a>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  // === ATUALIZA RANKING ===
+  const ranking = document.getElementById("ranking-clientes");
+  ranking.innerHTML = clientesOrdenados.slice(0,10).map(c => `
+    <li>${c.nome} — ${c.visitas.length} visitas</li>
+  `).join("");
+}
+
+// Atualiza gráficos sempre que os agendamentos mudarem
+function updateAll() {
+  updateStats();
+  renderBookings();
+  atualizarGraficos();
+  gerarRelatorioClientes();
+}
+
+// Substituir chamadas antigas
+loadBookings(); // onSnapshot já chama updateStats/renderBookings
+onSnapshot(query(collection(db, "agendamentos")), ()=>updateAll());
+
     // ============================
 // 📅 Flatpickr nos filtros de data
 // ============================

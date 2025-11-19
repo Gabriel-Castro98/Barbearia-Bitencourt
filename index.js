@@ -131,6 +131,21 @@ Acesse o painel admin para mais detalhes.
     res.status(500).json({ success: false, error: error.message })
   }
 })
+    // ============================================
+    // ROTA KEEP-ALIVE (ANTI-COLD-START)
+    // ============================================
+    app.get("/ping", (req, res) => {
+      res.status(200).send("pong");
+    });
+    // ===============================
+    // ANTI-COLD-START
+    // ===============================
+    setInterval(() => {
+      fetch("https://SEU_RENDER_URL.onrender.com/ping")
+        .then(() => console.log("🔥 Mantendo Render acordado..."))
+        .catch(() => console.log("⚠ Render dormindo, tentando acordar..."));
+    }, 10 * 60 * 1000); // a cada 10 minutos
+
 
 // ============================================
 // Inicialização do servidor
