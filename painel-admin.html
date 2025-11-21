@@ -226,6 +226,46 @@ to { opacity: 1; transform: translateY(0); }
     </div>
   </div>
 </section>
+<!-- RELATÓRIO DE SERVIÇOS -->
+<section id="relatorio-servicos" class="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden mt-6">
+  <div class="p-6 border-b border-zinc-800">
+    <h2 class="text-xl font-bold">Relatório de Serviços</h2>
+    <p class="text-zinc-400 text-sm mt-1">Análise completa de performance dos serviços.</p>
+  </div>
+
+  <div class="p-6 space-y-6">
+
+    <!-- KPIs -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="stat-card">
+        <p class="text-zinc-400 text-sm">Serviço Mais Lucrativo</p>
+        <p id="kpi-lucrativo" class="text-xl font-bold mt-1">—</p>
+      </div>
+
+      <div class="stat-card">
+        <p class="text-zinc-400 text-sm">Serviço Mais Procurado</p>
+        <p id="kpi-buscado" class="text-xl font-bold mt-1">—</p>
+      </div>
+
+      <div class="stat-card">
+        <p class="text-zinc-400 text-sm">Ticket Médio por Serviço</p>
+        <p id="kpi-ticket-medio-servico" class="text-xl font-bold mt-1">R$ 0</p>
+      </div>
+
+      <div class="stat-card">
+        <p class="text-zinc-400 text-sm">Tempo Total no Mês</p>
+        <p id="kpi-tempo-total" class="text-xl font-bold mt-1">0 min</p>
+      </div>
+    </div>
+
+    <!-- COMPARATIVO MENSAL -->
+    <div class="bg-zinc-800 p-4 rounded-xl">
+      <h3 class="text-zinc-300 font-semibold mb-2">Comparativo Mês Atual vs Mês Passado</h3>
+      <canvas id="chart-servicos-mensal"></canvas>
+    </div>
+
+  </div>
+</section>
 </main>
 
 <footer class="bg-zinc-900 py-12 text-center text-zinc-400 mt-20">
@@ -933,6 +973,108 @@ function gerarRelatorioClientes() {
     <li>${c.nome} — ${c.visitas.length} visitas</li>
   `).join("");
 }
+// =====================================
+// 📌 RELATÓRIO DE SERVIÇOS
+// =====================================
+function gerarRelatorioServicos() {
+  const servicosMap = {}; // { NomeServico: { qtd, total, duracaoTotal } }
+
+  const agora = new Date();
+  const mesAtual = agora.getMonth();
+  const mesPassado = mesAtual === 0 ? 11 : mesAtual - 1;
+
+  // Preparar dados mensais
+  const mensalAtual = {};
+  const mensalPassado = {};
+
+  allBookings.forEach(b => {
+    if (!b.servico) return;
+
+    const data = toDate(b.data);
+    if (!data) return;
+
+    const servico = b.servico;
+    const dados = servicos.find(s => s.nome === servico);
+    if (!dados) return;
+
+    // Inicializar
+    if (!servicosMap[servico]) {
+      servicosMap[servico] = {
+        qtd: 0,
+        total: 0,
+        duracaoTotal: 0
+      };
+    }
+
+    servicosMap[servico].qtd++;
+    servicosMap[servico].total += dados.preco;
+    servicosMap[servico].duracaoTotal += parseInt(dados.duracao || 0);
+
+    // Comparativo mensal
+    if (data.getMonth() === mesAtual) {
+      mensalAtual[servico] = (mensalAtual[servico] || 0) + 1;
+    }
+    if (data.getMonth() === mesPassado) {
+      mensalPassado[servico] = (mensalPassado[servico] || 0) + 1;
+    }
+  });
+
+
+  // ===============================
+  // 🧮 KPIs
+  // ===============================
+  const serviçosOrdenadosLucro = Object.entries(servicosMap).sort((a, b) => b[1].total - a[1].total);
+  const serviçosOrdenadosBusca = Object.entries(servicosMap).sort((a, b) => b[1].qtd - a[1].qtd);
+
+  document.getElementById("kpi-lucrativo").innerText =
+    serviçosOrdenadosLucro[0]?.[0] || "—";
+
+  document.getElementById("kpi-buscado").innerText =
+    serviçosOrdenadosBusca[0]?.[0] || "—";
+
+  const totalServicos = Object.values(servicosMap).reduce((acc, s) => acc + s.qtd, 0);
+  const totalFaturamento = Object.values(servicosMap).reduce((acc, s) => acc + s.total, 0);
+
+  document.getElementById("kpi-ticket-medio-servico").innerText =
+    totalServicos ? `R$ ${(totalFaturamento / totalServicos).toFixed(2)}` : "R$ 0";
+
+  const tempoTotalMes = Object.values(servicosMap).reduce((acc, s) => acc + s.duracaoTotal, 0);
+  document.getElementById("kpi-tempo-total").innerText = `${tempoTotalMes} min`;
+
+
+  // ===============================
+  // 📊 COMPARATIVO MENSAL (GRÁFICO)
+  // ===============================
+  const servicosNomes = servicos.map(s => s.nome);
+
+  const datasetAtual = servicosNomes.map(n => mensalAtual[n] || 0);
+  const datasetPassado = servicosNomes.map(n => mensalPassado[n] || 0);
+
+  if (window.chartServicosMensal) window.chartServicosMensal.destroy();
+
+  window.chartServicosMensal = new Chart(document.getElementById("chart-servicos-mensal"), {
+    type: "bar",
+    data: {
+      labels: servicosNomes,
+      datasets: [
+        {
+          label: "Mês Atual",
+          data: datasetAtual,
+          backgroundColor: "#f59e0b",
+        },
+        {
+          label: "Mês Passado",
+          data: datasetPassado,
+          backgroundColor: "#3b82f6",
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
 
 // Atualiza gráficos sempre que os agendamentos mudarem
 function updateAll() {
@@ -940,6 +1082,7 @@ function updateAll() {
   renderBookings();
   atualizarGraficos();
   gerarRelatorioClientes();
+  gerarRelatorioServicos();
 }
 
 // Substituir chamadas antigas

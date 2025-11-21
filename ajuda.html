@@ -46,7 +46,7 @@
     <a href="index.html#servicos" class="block text-zinc-300 hover:text-amber-500 transition-colors">Serviços</a>
     <a href="index.html#sobre" class="block text-zinc-300 hover:text-amber-500 transition-colors">Sobre</a>
     <a href="ajuda.html" class="block text-amber-500 hover:text-amber-400 transition-colors">Contato</a>
-    <a href="admin.html" id="mobile-admin-btn" class="hidden block text-zinc-300 hover:text-amber-500 transition-colors">Painel Admin</a>
+    <a href="admin.html" id="mobile-admin-btn" class="hidden text-zinc-300 hover:text-amber-500 transition-colors">Painel Admin</a>
     <button id="mobile-logout-btn" class="block text-red-400 hover:text-red-300 transition-colors">Sair</button>
     <a href="login.html" id="mobile-login-btn"
             class="block text-zinc-300 hover:text-amber-500 transition-colors">Entrar</a>
@@ -80,7 +80,7 @@
                         </svg>
                     </div>
                     <h3 class="font-bold text-lg mb-2">E-mail</h3>
-                    <p class="text-zinc-400 mb-2">ytbgugu@gmail.com</p>
+                    <p class="text-zinc-400 mb-2">ytbgugu979@gmail.com</p>
                     <p class="text-sm text-zinc-500">Resposta em 24h</p>
                 </div>
 
@@ -205,7 +205,6 @@
             <p>Desenvolvido por Gabriel Castro</p>
         </div>
     </footer>
-    <script type="module" src="script.js"></script>
     <script type="module">
 import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
@@ -254,17 +253,6 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 </script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    const menuBtn = document.getElementById("mobile-menu-btn");
-    const mobileMenu = document.getElementById("mobile-menu");
-
-    if (menuBtn && mobileMenu) {
-        menuBtn.addEventListener("click", () => {
-            mobileMenu.classList.toggle("hidden");
-        });
-    }
-});
-</script>
+<script type="module" src="script.js"></script>
 </body>
 </html>
