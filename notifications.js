@@ -112,7 +112,7 @@ async function enviarEmailBarbeiro(dadosAgendamento) {
 // ============================================
 async function enviarWhatsApp(telefone, mensagem) {
   try {
-    const response = await fetch("https://barbearia-bitencourt.onrender.com/sendWhatsApp", {
+    const response = await fetch("https://barbearia-bitencourt-oficial.onrender.com/sendWhatsApp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ to: telefone, message: mensagem }),
