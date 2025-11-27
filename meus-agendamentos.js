@@ -415,4 +415,46 @@ auth.onAuthStateChanged(async (user) => {
     agendamentosList.appendChild(card);
   });
 });
+// ==============================================
+// MENU MOBILE (hambúrguer) — funciona em todas as páginas
+// ==============================================
+(() => {
+  const mobileBtn = document.getElementById("mobile-menu-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+
+  if (!mobileBtn || !mobileMenu) return; // página sem menu
+
+  // Abrir/fechar menu
+  mobileBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    mobileMenu.classList.toggle("hidden");
+    mobileBtn.classList.toggle("active");
+  });
+
+  // Fechar ao clicar em qualquer link dentro do menu
+  mobileMenu.querySelectorAll("a, button").forEach(item => {
+    item.addEventListener("click", () => {
+      mobileMenu.classList.add("hidden");
+      mobileBtn.classList.remove("active");
+    });
+  });
+
+  // Fechar ao clicar fora
+  document.addEventListener("click", (e) => {
+    if (mobileMenu.classList.contains("hidden")) return;
+    const clicouDentro = mobileMenu.contains(e.target) || mobileBtn.contains(e.target);
+    if (!clicouDentro) {
+      mobileMenu.classList.add("hidden");
+      mobileBtn.classList.remove("active");
+    }
+  });
+
+  // Fechar com ESC
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !mobileMenu.classList.contains("hidden")) {
+      mobileMenu.classList.add("hidden");
+      mobileBtn.classList.remove("active");
+    }
+  });
+})();
 
