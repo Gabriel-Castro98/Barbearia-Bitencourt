@@ -29,7 +29,6 @@ to { opacity: 1; transform: translateY(0); }
 <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-zinc-950 text-zinc-50">
-<div class="min-h-screen flex flex-col">
 
 
 <header class="bg-zinc-900 border-b border-zinc-800 px-6 py-4 relative">
@@ -281,10 +280,6 @@ to { opacity: 1; transform: translateY(0); }
 
     let allBookings = [];
     let currentFilter = "all";
-
-    // =========================
-    // 📅 FILTRO POR DATA (GLOBAIS)
-    // =========================
     let dateFilter = "all";
     let customStart = null;
     let customEnd = null;
@@ -375,15 +370,32 @@ to { opacity: 1; transform: translateY(0); }
     }
   });
 
-    // 📊 Carregar agendamentos
-    function loadBookings() {
-      const q = query(collection(db, "agendamentos"));
-      onSnapshot(q, (snapshot) => {
-        allBookings = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        updateStats();
-        renderBookings();
-      });
-    }
+   /* ==============================
+   CARREGAMENTO EM TEMPO REAL DOS AGENDAMENTOS
+   ============================== */
+function loadBookings() {
+  const agendamentosRef = collection(db, "agendamentos");
+
+  // Ordena por data e hora (mantém lista organizada automaticamente)
+  const q = query(
+    agendamentosRef,
+    orderBy("data", "asc"),
+    orderBy("hora", "asc")
+  );
+
+  onSnapshot(q, (snapshot) => {
+    allBookings = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    // Atualiza tudo em tempo real
+    updateStats();      // Atualiza os cartões de "Total / Hoje / Semana / Mês"
+    renderBookings();   // Renderiza a tabela/lista de agendamentos
+    atualizarRelatorios(); // Se existir seção de relatórios, ela atualiza também
+  });
+}
+
     const servicos = [
   { nome: "Corte", preco: 30 },
   { nome: "Corte e Barba", preco: 60 },
@@ -484,127 +496,141 @@ to { opacity: 1; transform: translateY(0); }
   document.getElementById("stat-top-hour").textContent = topHour;
 }
 
-
-
     function renderBookings() {
-      const tbody = document.getElementById("bookings-table");
-      const searchTerm = (document.getElementById("search-input").value || "").toLowerCase();
-      let filtered = allBookings.slice();
+  const tbody = document.getElementById("bookings-table");
+  const searchTerm = (document.getElementById("search-input").value || "").toLowerCase();
+  let filtered = allBookings.slice();
 
-      // Aplica filtro por data (usa toDate internamente)
-      filtered = applyDateFilter(filtered);
+  // Aplica filtro por data (usa toDate internamente)
+  filtered = applyDateFilter(filtered);
 
-      // Remove resultados sem status (status = "" ou undefined)
-      filtered = filtered.filter((b) => b.status && String(b.status).trim() !== "");
+  // Remove resultados sem status (status = "" ou undefined)
+  filtered = filtered.filter((b) => b.status && String(b.status).trim() !== "");
 
-      // Aplica filtro de status (todos / confirmado / concluido)
-      if (currentFilter !== "all") filtered = filtered.filter((b) => b.status === currentFilter);
+  // Aplica filtro de status (todos / confirmado / concluido)
+  if (currentFilter !== "all") filtered = filtered.filter((b) => b.status === currentFilter);
 
-      // Busca inteligente
-      if (searchTerm) {
-        filtered = filtered.filter((b) => {
-          const search = searchTerm;
+  // Busca inteligente
+  if (searchTerm) {
+    filtered = filtered.filter((b) => {
+      const search = searchTerm;
 
-          // Nome do cliente
-          const nome = (b.nome || "").toString().toLowerCase();
+      const nome = (b.nome || "").toString().toLowerCase();
+      const servico = Array.isArray(b.servico)
+        ? b.servico.join(", ").toLowerCase()
+        : String(b.servico || "").toLowerCase();
+      const barbeiro = (b.barbeiro || "").toString().toLowerCase();
+      const hora = (b.horario || b.hora || "").toString().toLowerCase();
 
-          // Serviço (string ou array)
-          const servico = Array.isArray(b.servico)
-            ? b.servico.join(", ").toLowerCase()
-            : String(b.servico || "").toLowerCase();
+      let dataBR = "";
+      let dataISO = "";
+      let diaMes = "";
+      let mesAno = "";
+      let dia = "";
 
-          // Barbeiro
-          const barbeiro = (b.barbeiro || "").toString().toLowerCase();
-
-          // Horário (13:30)
-          const hora = (b.horario || b.hora || "").toString().toLowerCase();
-
-          // Datas possíveis
-          let dataBR = "";
-          let dataISO = "";
-          let diaMes = "";
-          let mesAno = "";
-          let dia = "";
-
-          const d = toDate(b.data);
-          if (d) {
-            dataBR = d.toLocaleDateString("pt-BR");      // 14/11/2025
-            dataISO = d.toISOString().split("T")[0];     // 2025-11-14
-            const parts = dataBR.split("/");
-            if (parts.length === 3) {
-              const [dd, mm, yyyy] = parts;
-              diaMes = `${dd}/${mm}`;                      // 14/11
-              mesAno = `${mm}/${yyyy}`;                    // 11/2025
-              dia = dd;                                    // 14
-            }
-          }
-
-          return (
-            nome.includes(search) ||
-            servico.includes(search) ||
-            barbeiro.includes(search) ||
-            hora.includes(search) ||
-            dataBR.includes(search) ||
-            dataISO.includes(search) ||
-            diaMes.includes(search) ||
-            mesAno.includes(search) ||
-            dia.includes(search)
-          );
-        });
-      }
-      // 📌 Ordenação por data
-        filtered.sort((a, b) => {
-          const da = toDate(a.data);
-          const db = toDate(b.data);
-
-          if (!da || !db) return 0;
-
-          return sortOrder === "newest"
-            ? db - da   // mais novos primeiro
-            : da - db;  // mais antigos primeiro
-        });
-
-
-      if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-zinc-500">Nenhum agendamento encontrado.</td></tr>`;
-        return;
+      const d = toDate(b.data);
+      if (d) {
+        dataBR = d.toLocaleDateString("pt-BR");
+        dataISO = d.toISOString().split("T")[0];
+        const parts = dataBR.split("/");
+        if (parts.length === 3) {
+          const [dd, mm, yyyy] = parts;
+          diaMes = `${dd}/${mm}`;
+          mesAno = `${mm}/${yyyy}`;
+          dia = dd;
+        }
       }
 
-      const statusColors = {
-        confirmado: "bg-green-500/10 text-green-500 border-green-500",
-        concluido: "bg-blue-500/10 text-blue-500 border-blue-500",
-        cancelado: "bg-red-500/10 text-red-500 border-red-500",
-      };
+      return (
+        nome.includes(search) ||
+        servico.includes(search) ||
+        barbeiro.includes(search) ||
+        hora.includes(search) ||
+        dataBR.includes(search) ||
+        dataISO.includes(search) ||
+        diaMes.includes(search) ||
+        mesAno.includes(search) ||
+        dia.includes(search)
+      );
+    });
+  }
 
-      tbody.innerHTML = filtered
-        .map((b) => {
-          const dataDisplay = (() => {
-            const d = toDate(b.data);
-            return d ? d.toLocaleDateString("pt-BR") : "-";
-          })();
+  // Ordenação por data
+  filtered.sort((a, b) => {
+    const da = toDate(a.data);
+    const db = toDate(b.data);
 
-          const horarioDisplay = b.horario || b.hora || "—";
-          const badgeClass = statusColors[b.status] || "bg-zinc-700 text-zinc-300 border-zinc-700";
+    if (!da || !db) return 0;
 
-          return `
-            <tr class="hover:bg-zinc-800/50 transition">
-              <td class="px-6 py-4"><div class="font-medium">${b.nome || "-"}</div><div class="text-sm text-zinc-500">${b.email || ""}</div></td>
-              <td class="px-6 py-4">${Array.isArray(b.servico) ? b.servico.join(", ") : (b.servico || "-")}</td>
-              <td class="px-6 py-4">${b.barbeiro || "-"}</td>
-              <td class="px-6 py-4"><div>${dataDisplay}</div><div class="text-sm text-zinc-500">${horarioDisplay}</div></td>
-              <td class="px-6 py-4">${b.telefone || "-"}</td>
-              <td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-xs font-medium border ${badgeClass}">${(b.status || "").charAt(0).toUpperCase() + (b.status || "").slice(1)}</span></td>
-              <td class="px-6 py-4">
-                <div class="flex gap-2">
-                  ${b.status === "confirmado" ? `<button onclick="updateStatus('${b.id}','concluido')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">Concluir</button>` : ""}
-                  <button onclick="deleteBooking('${b.id}')" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">Excluir</button>
+    return sortOrder === "newest" ? db - da : da - db;
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-zinc-500">Nenhum agendamento encontrado.</td></tr>`;
+    return;
+  }
+
+  const statusColors = {
+    confirmado: "bg-green-500/10 text-green-500 border-green-500",
+    concluido: "bg-blue-500/10 text-blue-500 border-blue-500",
+    cancelado: "bg-red-500/10 text-red-500 border-red-500",
+  };
+
+  tbody.innerHTML = filtered
+    .map((b) => {
+      const dataDisplay = (() => {
+        const d = toDate(b.data);
+        return d ? d.toLocaleDateString("pt-BR") : "-";
+      })();
+
+      const horarioDisplay = b.horario || b.hora || "—";
+      const badgeClass = statusColors[b.status] || "bg-zinc-700 text-zinc-300 border-zinc-700";
+
+      // NOTE: more-menu-<id> is generated per-row; toggleMoreMenu(event,id) will open/close it
+      return `
+        <tr class="hover:bg-zinc-800/50 transition">
+          <td class="px-6 py-4"><div class="font-medium">${b.nome || "-"}</div><div class="text-sm text-zinc-500">${b.email || ""}</div></td>
+          <td class="px-6 py-4">${Array.isArray(b.servico) ? b.servico.join(", ") : (b.servico || "-")}</td>
+          <td class="px-6 py-4">${b.barbeiro || "-"}</td>
+          <td class="px-6 py-4"><div>${dataDisplay}</div><div class="text-sm text-zinc-500">${horarioDisplay}</div></td>
+          <td class="px-6 py-4">${b.telefone || "-"}</td>
+          <td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-xs font-medium border ${badgeClass}">${(b.status || "").charAt(0).toUpperCase() + (b.status || "").slice(1)}</span></td>
+          <td class="px-6 py-4">
+            <div class="flex gap-2 items-center relative">
+              ${b.status === "confirmado" ? `<button onclick="updateStatus('${b.id}','concluido')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">Concluir</button>` : ""}
+              <button onclick="deleteBooking('${b.id}')" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">Excluir</button>
+
+              <div class="relative">
+                <button class="px-3 py-1 bg-zinc-800 text-zinc-200 rounded" onclick="toggleMoreMenu(event, '${b.id}')">
+                  Ações ▾
+                </button>
+
+                <div id="more-menu-${b.id}" class="more-dropdown-menu mt-2 right-0">
+                  <button class="block w-full text-left px-3 py-2 rounded hover:bg-zinc-900" onclick="abrirModalRemarcar('${b.id}')">📆 Remarcar</button>
+                  <button class="block w-full text-left px-3 py-2 rounded hover:bg-zinc-900" onclick="abrirModalServicos('${b.id}')">🧩 Alterar serviços</button>
+                  <button class="block w-full text-left px-3 py-2 rounded hover:bg-zinc-900" onclick="abrirModalObservacoes('${b.id}')">📝 Observações</button>
+                  <button class="block w-full text-left px-3 py-2 rounded hover:bg-zinc-900" onclick="abrirModalHistorico('${b.email}')">🔍 Histórico</button>
+                  <hr class="my-1"/>
+                  <button class="block w-full text-left px-3 py-2 rounded hover:bg-zinc-900" onclick="enviarWhatsAppImediatoById('${b.id}')">💬 WhatsApp</button>
+                  <button class="block w-full text-left px-3 py-2 rounded hover:bg-zinc-900" onclick="enviarEmailImediatoById('${b.id}')">✉️ Enviar e-mail</button>
+                  <div class="px-3 py-2">
+                    <label class="flex items-center gap-2 text-sm">
+                      <input type="checkbox" onchange="toggleReminders('${b.id}', this.checked, document.querySelector('#remind-dayof-${b.id}')?.checked)" ${b.reminders?.dayBefore ? "checked":""}/> Lembrar dia anterior (08:00)
+                    </label>
+                    <label class="flex items-center gap-2 text-sm mt-1">
+                      <input id="remind-dayof-${b.id}" type="checkbox" onchange="toggleReminders('${b.id}', document.querySelector('#remind-dayof-${b.id}')?.checked, this.checked)" ${b.reminders?.dayOf ? "checked":""}/> Lembrar no dia (08:00)
+                    </label>
+                  </div>
                 </div>
-              </td>
-            </tr>
-          `;
-        })
-        .join("");
-    }
+              </div>
+
+            </div>
+          </td>
+        </tr>
+      `;
+    })
+    .join("");
+}
 
     window.updateStatus = async function (id, status) {
       await updateDoc(doc(db, "agendamentos", id), { status });
@@ -1083,6 +1109,7 @@ function updateAll() {
   atualizarGraficos();
   gerarRelatorioClientes();
   gerarRelatorioServicos();
+  
 }
 
 // Substituir chamadas antigas
@@ -1094,7 +1121,7 @@ onSnapshot(query(collection(db, "agendamentos")), ()=>updateAll());
 // ============================
 flatpickr("#start-range", {
   dateFormat: "Y-m-d",
-  locale: "pt",
+  locale: "default",
   monthSelectorType: "dropdown",
   disableMobile: true,
   defaultDate: null,
@@ -1105,7 +1132,7 @@ flatpickr("#start-range", {
 
 flatpickr("#end-range", {
   dateFormat: "Y-m-d",
-  locale: "pt",
+  locale: "default",
   monthSelectorType: "dropdown",
   disableMobile: true,
   defaultDate: null,
@@ -1113,7 +1140,317 @@ flatpickr("#end-range", {
     instance.clear(); // deixa o input vazio
   }
 });
+
+/* ==============================
+   CONTROLE DO MENU "AÇÕES ▾"
+   ============================== */
+function toggleMoreMenu(event, id) {
+  event.stopPropagation();
+  const menu = document.getElementById(`more-menu-${id}`);
+  if (!menu) return;
+
+  const isVisible = menu.classList.contains("show");
+
+  document.querySelectorAll(".more-dropdown-menu").forEach(m => {
+    m.classList.remove("show");
+  });
+
+  if (!isVisible) menu.classList.add("show");
+
+  window.agendamentoAtual = id;
+}
+
+document.addEventListener("click", () => {
+  document.querySelectorAll(".more-dropdown-menu").forEach(menu => {
+    menu.classList.remove("show");
+  });
+});
+
+
+/* ==============================
+   CONTROLE DOS MODAIS
+   ============================== */
+function openModal(modalId) {
+  document.getElementById("modal-overlay").classList.remove("hidden");
+  document.querySelectorAll(".modal-card").forEach(m => m.classList.add("hidden"));
+  document.getElementById(modalId).classList.remove("hidden");
+}
+
+function closeModal() {
+  document.getElementById("modal-overlay").classList.add("hidden");
+  document.querySelectorAll(".modal-card").forEach(m => m.classList.add("hidden"));
+}
+
+document.getElementById("modal-overlay").addEventListener("click", (e) => {
+  if (e.target.id === "modal-overlay") closeModal();
+});
+
+
+/* ==============================
+   FUNÇÕES FIRESTORE
+   ============================== */
+async function carregarServicos(id) {
+  const servicosList = document.getElementById("servicos-list");
+  servicosList.innerHTML = "";
+  const docRef = doc(db, "agendamentos", id);
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) return;
+
+  const agendamento = docSnap.data();
+  let total = 0;
+  agendamento.servicos?.forEach(s => {
+  const div = document.createElement("div");
+  div.className = "flex justify-between items-center";
+
+  div.innerHTML = `
+    <label class="flex items-center gap-2">
+      <input type="checkbox" value="${s.nome}" checked />
+      <span>${s.nome}</span>
+    </label>
+    <span>R$ ${s.preco.toFixed(2)}</span>
+  `;
+
+  servicosList.appendChild(div);
+  total += s.preco;
+});
+
+
+  document.getElementById("servicos-total").textContent = `R$ ${total.toFixed(2)}`;
+}
+// ---------- AJUSTE TOTAL DOS SERVIÇOS ----------
+function updateServicosTotal() {
+  const checkboxes = document.querySelectorAll("#servicos-list input[type=checkbox]");
+  let total = 0;
+  checkboxes.forEach(cb => {
+    if (cb.checked) {
+      const s = servicos.find(x => x.nome === cb.value);
+      if (s) total += s.preco;
+    }
+  });
+  document.getElementById("servicos-total").textContent = `R$ ${total.toFixed(2)}`;
+}
+
+// Atualiza total sempre que marca/desmarca serviço
+document.getElementById("servicos-list").addEventListener("change", updateServicosTotal);
+
+async function carregarObservacoes(id) {
+  const docRef = doc(db, "agendamentos", id);
+  const docSnap = await getDoc(docRef);
+  document.getElementById("observacoes-text").value = docSnap.exists() ? docSnap.data().observacoes || "" : "";
+}
+
+async function carregarHistorico(email) {
+  const historicoDiv = document.getElementById("historico-content");
+  historicoDiv.innerHTML = "";
+  const q = query(collection(db, "agendamentos"), where("email", "==", email));
+  const querySnapshot = await getDocs(q);
+
+  if (querySnapshot.empty) {
+    historicoDiv.textContent = "Nenhum histórico encontrado.";
+    return;
+  }
+
+  querySnapshot.forEach(docSnap => {
+    const a = docSnap.data();
+    const div = document.createElement("div");
+    div.className = "flex justify-between bg-zinc-800 p-2 rounded";
+    div.innerHTML = `<span>${a.data} ${a.hora}</span><span>${a.servicos?.map(s => s.nome).join(", ")}</span>`;
+    historicoDiv.appendChild(div);
+  });
+}
+
+/* ==============================
+   FUNÇÕES DE ABERTURA ESPECÍFICA
+   ============================== */
+function abrirModalRemarcar(id) {
+  window.agendamentoAtual = id;
+  openModal("modal-remarcar");
+}
+
+function abrirModalServicos(id) {
+  window.agendamentoAtual = id;
+  carregarServicos(id);
+  openModal("modal-servicos");
+}
+
+function abrirModalObservacoes(id) {
+  window.agendamentoAtual = id;
+  carregarObservacoes(id);
+  openModal("modal-observacoes");
+}
+
+function abrirModalHistorico(email) {
+  carregarHistorico(email);
+  openModal("modal-historico");
+}
+
+/* ==============================
+   FUNÇÕES DE SALVAMENTO (PLACEHOLDER)
+   ============================== */
+async function salvarRemarcacao() {
+  const id = window.agendamentoAtual;
+  if (!id) return;
+
+  const novaData = document.getElementById("remarcar-data").value;
+  const novaHora = document.getElementById("remarcar-hora").value;
+
+  if (!novaData || !novaHora) {
+    alert("Selecione data e hora.");
+    return;
+  }
+
+  const docRef = doc(db, "agendamentos", id);
+
+  try {
+    await updateDoc(docRef, {
+      data: novaData,
+      hora: novaHora,
+      atualizadoEm: serverTimestamp()
+    });
+
+    closeModal();
+    updateAll(); // Atualiza gráficos, tabela e relatórios
+    alert("Agendamento remarcado com sucesso!");
+  } catch (error) {
+    console.error("Erro ao remarcar:", error);
+    alert("Não foi possível remarcar o agendamento.");
+  }
+}
+
+async function salvarServicos() {
+  const id = window.agendamentoAtual;
+  if (!id) return;
+
+  const servicosList = Array.from(document.querySelectorAll("#servicos-list div span:first-child"));
+  const servicosSelecionados = servicosList.map((span) => {
+    const nome = span.textContent;
+    const serv = servicos.find(s => s.nome === nome);
+    return serv ? { nome: serv.nome, preco: serv.preco } : null;
+  }).filter(Boolean);
+
+  if (!servicosSelecionados.length) {
+    alert("Selecione pelo menos um serviço.");
+    return;
+  }
+
+  const docRef = doc(db, "agendamentos", id);
+
+  try {
+    await updateDoc(docRef, {
+      servicos: servicosSelecionados,
+      atualizadoEm: serverTimestamp()
+    });
+
+    closeModal();
+    updateAll();
+    alert("Serviços atualizados com sucesso!");
+  } catch (error) {
+    console.error("Erro ao atualizar serviços:", error);
+    alert("Não foi possível atualizar os serviços.");
+  }
+}
+
+async function salvarObservacoes() {
+  const id = window.agendamentoAtual;
+  if (!id) return;
+
+  const observacoes = document.getElementById("observacoes-text").value || "";
+
+  const docRef = doc(db, "agendamentos", id);
+
+  try {
+    await updateDoc(docRef, {
+      observacoes,
+      atualizadoEm: serverTimestamp()
+    });
+
+    closeModal();
+    updateAll();
+    alert("Observações salvas com sucesso!");
+  } catch (error) {
+    console.error("Erro ao salvar observações:", error);
+    alert("Não foi possível salvar as observações.");
+  }
+}
+
+/* ==============================
+   EXPÕE FUNÇÕES PARA HTML
+   ============================== */
+window.toggleMoreMenu = toggleMoreMenu;
+window.abrirModalRemarcar = abrirModalRemarcar;
+window.abrirModalServicos = abrirModalServicos;
+window.abrirModalObservacoes = abrirModalObservacoes;
+window.abrirModalHistorico = abrirModalHistorico;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.salvarRemarcacao = salvarRemarcacao;
+window.salvarServicos = salvarServicos;
+window.salvarObservacoes = salvarObservacoes;
+
+
   </script>
+  <!-- ===== MODAIS AVANÇADOS (cole antes de </body>) ===== -->
+<div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40 flex items-center justify-center">
+
+  <!-- REMARCAR -->
+  <div id="modal-remarcar" class="modal-card bg-zinc-900 p-6 rounded-xl shadow-xl w-full max-w-md hidden">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold">Remarcar Agendamento</h3>
+      <button class="modal-close text-zinc-400" onclick="closeModal()">✕</button>
+    </div>
+    <div class="space-y-3">
+      <input id="remarcar-data" type="date" class="w-full px-3 py-2 rounded bg-zinc-800" />
+      <input id="remarcar-hora" type="time" class="w-full px-3 py-2 rounded bg-zinc-800" />
+      <div class="flex gap-2 justify-end">
+        <button class="px-4 py-2 rounded bg-zinc-700" onclick="closeModal()">Cancelar</button>
+        <button class="px-4 py-2 rounded bg-amber-500 text-black" onclick="salvarRemarcacao()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALTERAR SERVIÇOS -->
+  <div id="modal-servicos" class="modal-card bg-zinc-900 p-6 rounded-xl shadow-xl w-full max-w-md hidden">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold">Alterar Serviços</h3>
+      <button class="modal-close text-zinc-400" onclick="closeModal()">✕</button>
+    </div>
+    <div id="servicos-list" class="space-y-2 max-h-60 overflow-auto mb-4"></div>
+    <div class="flex items-center justify-between">
+      <div class="text-zinc-400">Total: <span id="servicos-total">R$ 0,00</span></div>
+      <div class="flex gap-2">
+        <button class="px-4 py-2 rounded bg-zinc-700" onclick="closeModal()">Cancelar</button>
+        <button class="px-4 py-2 rounded bg-amber-500 text-black" onclick="salvarServicos()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OBSERVAÇÕES -->
+  <div id="modal-observacoes" class="modal-card bg-zinc-900 p-6 rounded-xl shadow-xl w-full max-w-md hidden">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold">Observações Internas</h3>
+      <button class="modal-close text-zinc-400" onclick="closeModal()">✕</button>
+    </div>
+    <textarea id="observacoes-text" rows="6" class="w-full bg-zinc-800 px-3 py-2 rounded mb-4" placeholder="Notas internas visíveis apenas ao time..."></textarea>
+    <div class="flex justify-end gap-2">
+      <button class="px-4 py-2 rounded bg-zinc-700" onclick="closeModal()">Cancelar</button>
+      <button class="px-4 py-2 rounded bg-amber-500 text-black" onclick="salvarObservacoes()">Salvar</button>
+    </div>
+  </div>
+
+  <!-- HISTÓRICO -->
+  <div id="modal-historico" class="modal-card bg-zinc-900 p-6 rounded-xl shadow-xl w-full max-w-md hidden">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold">Histórico do Cliente</h3>
+      <button class="modal-close text-zinc-400" onclick="closeModal()">✕</button>
+    </div>
+    <div id="historico-content" class="max-h-72 overflow-auto space-y-3 text-sm text-zinc-200"></div>
+    <div class="flex justify-end mt-3">
+      <button class="px-4 py-2 rounded bg-zinc-700" onclick="closeModal()">Fechar</button>
+    </div>
+  </div>
+
+</div>
+
 </body>
 </html>
 

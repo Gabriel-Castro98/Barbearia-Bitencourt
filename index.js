@@ -2,6 +2,7 @@ import express from "express"
 import twilio from "twilio"
 import dotenv from "dotenv"
 import cors from "cors"
+import fetch from "node-fetch" // Necessário para o keep-alive no Node
 
 dotenv.config()
 const app = express()
@@ -45,12 +46,10 @@ app.post("/sendWhatsApp", async (req, res) => {
   }
 })
 
+
 // ============================================
 // Rota: Notificação automática de novo agendamento
-// (para substituir o onCreate do Firestore)
 // ============================================
-// Você pode chamar essa rota quando salvar um agendamento no Firestore
-// Exemplo: fetch("https://seuservidor.onrender.com/novoAgendamento", {...})
 app.post("/novoAgendamento", async (req, res) => {
   const agendamento = req.body
 
@@ -60,7 +59,7 @@ app.post("/novoAgendamento", async (req, res) => {
     const accountSid = process.env.TWILIO_ACCOUNT_SID
     const authToken = process.env.TWILIO_AUTH_TOKEN
     const twilioWhatsAppNumber = process.env.TWILIO_WHATSAPP_NUMBER
-    const barbeiroWhatsApp = process.env.BARBEIRO_WHATSAPP // Ex: +5511999999999
+    const barbeiroWhatsApp = process.env.BARBEIRO_WHATSAPP
 
     if (!accountSid || !authToken || !twilioWhatsAppNumber) {
       console.error("❌ Credenciais do Twilio ausentes")
@@ -70,7 +69,7 @@ app.post("/novoAgendamento", async (req, res) => {
     const client = twilio(accountSid, authToken)
     const dataFormatada = new Date(agendamento.data).toLocaleDateString("pt-BR")
 
-    // Mensagem para o cliente
+    // ===== Mensagem para o cliente =====
     if (agendamento.telefone) {
       const mensagemCliente = `
 🎉 *Agendamento Confirmado - Barbearia Bitencourt*
@@ -84,7 +83,7 @@ Seu agendamento foi confirmado com sucesso:
 ✂️ *Serviço:* ${agendamento.servico}
 👨 *Barbeiro:* ${agendamento.barbeiro}
 
-📍 Endereço: Av. Paulista, 1000 - São Paulo, SP
+📍 Endereço: Rua Berilo, 45 - Londrina, PR
 
 Aguardamos você! 💈
       `.trim()
@@ -98,7 +97,7 @@ Aguardamos você! 💈
       console.log("✅ WhatsApp enviado para cliente:", agendamento.telefone)
     }
 
-    // Mensagem para o barbeiro
+    // ===== Mensagem para o barbeiro =====
     if (barbeiroWhatsApp) {
       const mensagemBarbeiro = `
 🔔 *Novo Agendamento - Barbearia Bitencourt*
@@ -131,20 +130,25 @@ Acesse o painel admin para mais detalhes.
     res.status(500).json({ success: false, error: error.message })
   }
 })
-    // ============================================
-    // ROTA KEEP-ALIVE (ANTI-COLD-START)
-    // ============================================
-    app.get("/ping", (req, res) => {
-      res.status(200).send("pong");
-    });
-    // ===============================
-    // ANTI-COLD-START
-    // ===============================
-    setInterval(() => {
-      fetch("https://SEU_RENDER_URL.onrender.com/ping")
-        .then(() => console.log("🔥 Mantendo Render acordado..."))
-        .catch(() => console.log("⚠ Render dormindo, tentando acordar..."));
-    }, 10 * 60 * 1000); // a cada 10 minutos
+
+
+// ============================================
+// Rota KEEP-ALIVE (anti cold-start)
+// ============================================
+app.get("/ping", (req, res) => {
+  res.status(200).send("pong")
+})
+
+
+// ============================================
+// Anti cold-start (Render)
+// ============================================
+setInterval(() => {
+  if (!process.env.RENDER_URL) return
+  fetch(process.env.RENDER_URL + "/ping")
+    .then(() => console.log("🔥 Mantendo Render acordado..."))
+    .catch(() => console.log("⚠ Render dormindo, tentando acordar..."))
+}, 10 * 60 * 1000) // a cada 10min
 
 
 // ============================================

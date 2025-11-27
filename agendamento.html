@@ -36,16 +36,15 @@
       </button>
 
       <!-- Menu desktop -->
-      <div class="hidden md:flex items-center gap-8">
+      <div class="hidden md:flex items-center gap-6">
         <span id="user-greeting" class="text-zinc-400"></span>
         <a href="index.html" class="text-zinc-300 hover:text-amber-500 transition-colors">Início</a>
         <a href="index.html#servicos" class="text-zinc-300 hover:text-amber-500 transition-colors">Serviços</a>
         <a href="index.html#sobre" class="text-zinc-300 hover:text-amber-500 transition-colors">Sobre</a>
         <a href="ajuda.html" class="text-zinc-300 hover:text-amber-500 transition-colors">Contato</a>
+        <a href="meus-agendamentos.html" id="btn-meus-agendamentos" class="text-zinc-300 hover:text-amber-500 transition-colors">Meus Agendamentos</a>
         <a id="admin-btn" href="admin.html" class="hidden text-amber-500 hover:text-amber-400 transition-colors">Painel Admin</a>
-        <button id="logout-btn" class="text-red-400 hover:text-red-300 transition-colors">Sair</button>
-        
-
+        <button id="logout-btn" class="hidden text-red-400 hover:text-red-300 transition-colors">Sair</button>
       </div>
     </div>
 
@@ -56,14 +55,13 @@
       <a href="index.html#servicos" class="block text-zinc-300 hover:text-amber-500 transition-colors">Serviços</a>
       <a href="index.html#sobre" class="block text-zinc-300 hover:text-amber-500 transition-colors">Sobre</a>
       <a href="ajuda.html" class="block text-zinc-300 hover:text-amber-500 transition-colors">Contato</a>
+      <a href="meus-agendamentos.html" id="mobile-btn-meus-agendamentos" class="block text-zinc-300 hover:text-amber-500 transition-colors">Meus Agendamentos</a>
       <p><a id="mobile-admin-btn" href="admin.html" class="hidden text-amber-500 hover:text-amber-400 transition-colors">
         Painel Admin</a></p>
-      <button id="mobile-logout-btn" class="block text-red-400 hover:text-red-300 transition-colors">Sair</button>
+      <button id="mobile-logout-btn" class="hidden block text-red-400 hover:text-red-300 transition-colors">Sair</button>
       <a href="login.html" id="mobile-login-btn"
             class="block text-zinc-300 hover:text-amber-500 transition-colors">Entrar</a>
-      
     </div>
-
   </nav>
 </header>
 
@@ -245,41 +243,37 @@
             <p>Desenvolvido por Gabriel Castro</p>
         </div>
     </footer>
-  <!-- Flatpickr JS -->
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <!-- Locale PT-BR -->
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
-    <!-- EmailJS -->
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <!-- Firebase config (precisa vir antes do script principal) -->
-  <script type="module" src="firebase-config.js"></script>
-  <!-- Script principal -->
-  <script type="module" src="script.js"></script>
-  <script type="module">
+ 
+    <!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script type="module" src="firebase-config.js"></script>
+<script type="module" src="script.js"></script>
+
+<script type="module">
 import { auth, db } from "./firebase-config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
 onAuthStateChanged(auth, async (user) => {
-    const userNameDesktop = document.getElementById("user-name");
+    const userNameDesktop = document.getElementById("user-greeting");
     const logoutDesktop = document.getElementById("logout-btn");
-
-    const logoutMobile = document.getElementById("logout-btn-mobile");
-
+    const logoutMobile = document.getElementById("mobile-logout-btn");
     const adminBtn = document.getElementById("admin-btn");
     const mobileAdminBtn = document.getElementById("mobile-admin-btn");
 
     if (user) {
         const nome = user.displayName || "Cliente";
-        if (userNameDesktop) userNameDesktop.textContent = `Olá, ${nome}`;
-
-        if (logoutDesktop) logoutDesktop.classList.remove("hidden");
-        if (logoutMobile) logoutMobile.classList.remove("hidden");
+        userNameDesktop.textContent = `Olá, ${nome}`;
+        logoutDesktop.classList.remove("hidden");
+        logoutMobile.classList.remove("hidden");
+        btnMeusAgendamentos.classList.remove("hidden");
+        btnMobileAgendamentos.classList.remove("hidden");
 
         try {
             const ref = doc(db, "usuarios", user.uid);
             const snap = await getDoc(ref);
-
             const isAdmin = snap.exists() && snap.data().role === "admin";
 
             if (isAdmin) {
@@ -294,16 +288,13 @@ onAuthStateChanged(auth, async (user) => {
         }
 
     } else {
-        if (userNameDesktop) userNameDesktop.textContent = "";
-        if (logoutDesktop) logoutDesktop.classList.add("hidden");
-        if (logoutMobile) logoutMobile.classList.add("hidden");
-
+        userNameDesktop.textContent = "";
+        logoutDesktop.classList.add("hidden");
+        logoutMobile.classList.add("hidden");
         adminBtn?.classList.add("hidden");
         mobileAdminBtn?.classList.add("hidden");
     }
 });
 </script>
-
 </body>
 </html>
-  

@@ -43,6 +43,7 @@
             <a href="#servicos" class="text-zinc-300 hover:text-amber-500 transition-colors">Serviços</a>
             <a href="#sobre" class="text-zinc-300 hover:text-amber-500 transition-colors">Sobre</a>
             <a href="ajuda.html" class="text-zinc-300 hover:text-amber-500 transition-colors">Contato</a>
+            <a href="meus-agendamentos.html" id="btn-meus-agendamentos" class="text-zinc-300 hover:text-amber-500 transition-colors">Meus Agendamentos</a>
             <a href="agendamento.html" id="agendar-btn"
             class="bg-amber-500 text-zinc-950 px-6 py-2 rounded-lg font-semibold hover:bg-amber-400 transition-colors">
             Agendar</a>
@@ -61,6 +62,7 @@
         <a href="#servicos" class="block text-zinc-300 hover:text-amber-500 transition-colors">Serviços</a>
         <a href="#sobre" class="block text-zinc-300 hover:text-amber-500 transition-colors">Sobre</a>
         <a href="ajuda.html" class="block text-zinc-300 hover:text-amber-500 transition-colors">Contato</a>
+        <a href="meus-agendamentos.html" id="mobile-btn-meus-agendamentos" class="block text-zinc-300 hover:text-amber-500 transition-colors">Meus Agendamentos</a>
         <a href="admin.html" id="mobile-admin-btn" class="hidden block text-zinc-300 hover:text-amber-500 transition-colors">Painel Admin</a>
         <a href="agendamento.html"
             class="block bg-amber-500 text-zinc-950 px-6 py-2 rounded-lg font-semibold hover:bg-amber-400 transition-colors text-center">
@@ -204,7 +206,7 @@
                 <h4 class="font-bold mb-4">Contato</h4>
                 <ul class="space-y-2 text-zinc-400">
                     <li>📞 (43) 98499-4564</li>
-                    <li>✉️ ytbgugu@gmail.com</li>
+                    <li>✉️ ytbgugu979@gmail.com</li>
                     <li>📍 Rua Berilo, 45 - Londrina, PR</li>
                 </ul>
             </div>
@@ -229,29 +231,63 @@
 <script type="module" src="firebase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 <script type="module">
-import { auth } from './firebase-config.js';
+import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js';
+import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js';
+
+// Seletores Admin
+const adminBtn = document.getElementById("admin-btn");
+const mobileAdminBtn = document.getElementById("mobile-admin-btn");
 
 // Verifica login e ajusta interface
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     const greeting = document.getElementById('user-greeting');
     const mobileGreeting = document.getElementById('mobile-user-greeting');
-    const logoutBtns = [document.getElementById('logout-btn'), document.getElementById('mobile-logout-btn')];
-    const loginBtns = [document.getElementById('login-btn'), document.getElementById('mobile-login-btn')];
+    const logoutBtns = [
+        document.getElementById('logout-btn'),
+        document.getElementById('mobile-logout-btn')
+    ];
+    const loginBtns = [
+        document.getElementById('login-btn'),
+        document.getElementById('mobile-login-btn')
+    ];
 
     if (user) {
         const nome = user.displayName || 'Cliente';
         greeting.textContent = `Olá, ${nome}`;
         mobileGreeting.textContent = `Olá, ${nome}`;
 
-        logoutBtns.forEach(b => b.classList.remove('hidden'));
-        loginBtns.forEach(b => b.classList.add('hidden'));
+        logoutBtns.forEach(b => b?.classList.remove('hidden'));
+        loginBtns.forEach(b => b?.classList.add('hidden'));
+
+        // 🔥 VERIFICAÇÃO DE ADMIN
+        try {
+            const ref = doc(db, "usuarios", user.uid);
+            const snap = await getDoc(ref);
+
+            if (snap.exists() && snap.data().role === "admin") {
+                adminBtn?.classList.remove("hidden");
+                mobileAdminBtn?.classList.remove("hidden");
+            } else {
+                adminBtn?.classList.add("hidden");
+                mobileAdminBtn?.classList.add("hidden");
+            }
+        } catch (error) {
+            console.error("Erro ao verificar admin:", error);
+            adminBtn?.classList.add("hidden");
+            mobileAdminBtn?.classList.add("hidden");
+        }
 
     } else {
         greeting.textContent = '';
         mobileGreeting.textContent = '';
-        logoutBtns.forEach(b => b.classList.add('hidden'));
-        loginBtns.forEach(b => b.classList.remove('hidden'));
+
+        logoutBtns.forEach(b => b?.classList.add('hidden'));
+        loginBtns.forEach(b => b?.classList.remove('hidden'));
+
+        // Esconde admin se não logado
+        adminBtn?.classList.add("hidden");
+        mobileAdminBtn?.classList.add("hidden");
     }
 });
 
@@ -269,61 +305,12 @@ const addLogout = (id) => {
         });
     }
 };
+
 addLogout('logout-btn');
 addLogout('mobile-logout-btn');
 
 </script>
-<script type="module">
-import { auth, db } from "./firebase-config.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-// Controle de login e mensagens
-onAuthStateChanged(auth, async (user) => {
-    const greeting = document.getElementById('user-greeting');
-    const mobileGreeting = document.getElementById('mobile-user-greeting');
-    const logoutBtns = [document.getElementById('logout-btn'), document.getElementById('mobile-logout-btn')];
-    const loginBtns = [document.getElementById('login-btn'), document.getElementById('mobile-login-btn')];
-
-    const adminBtn = document.getElementById("admin-btn");
-    const mobileAdminBtn = document.getElementById("mobile-admin-btn");
-
-    if (user) {
-        const nome = user.displayName || "Cliente";
-
-        greeting.textContent = `Olá, ${nome}`;
-        mobileGreeting.textContent = `Olá, ${nome}`;
-
-        logoutBtns.forEach(b => b.classList.remove("hidden"));
-        loginBtns.forEach(b => b.classList.add("hidden"));
-
-        // ======= VERIFICA SE É ADMIN =======
-        try {
-            const ref = doc(db, "usuarios", user.uid);
-            const snap = await getDoc(ref);
-
-            if (snap.exists() && snap.data().role === "admin") {
-                adminBtn?.classList.remove("hidden");
-                mobileAdminBtn?.classList.remove("hidden");
-            } else {
-                adminBtn?.classList.add("hidden");
-                mobileAdminBtn?.classList.add("hidden");
-            }
-        } catch (err) {
-            console.error("Erro ao verificar admin:", err);
-        }
-
-    } else {
-        greeting.textContent = "";
-        mobileGreeting.textContent = "";
-        logoutBtns.forEach(b => b.classList.add("hidden"));
-        loginBtns.forEach(b => b.classList.remove("hidden"));
-
-        adminBtn?.classList.add("hidden");
-        mobileAdminBtn?.classList.add("hidden");
-    }
-});
-</script>
 <script type="module" src="script.js"></script>
 </body>
 </html>

@@ -4,21 +4,15 @@
 // ============================================
 // CONFIGURAÇÃO EMAILJS
 // ============================================
-// 1. Crie uma conta em https://www.emailjs.com/
-// 2. Crie um serviço de email (Gmail, Outlook, etc.)
-// 3. Crie templates para cliente e barbeiro
-// 4. Substitua as credenciais abaixo
-
 const EMAILJS_CONFIG = {
-  publicKey: "GxvelDMPKwTtGk66W", // Sua Public Key do EmailJS
-  serviceId: "service_xvxqplm", // ID do serviço de email
-  templateClienteId: "template_l6zbofl", // ID do template para cliente
-  templateBarbeiroId: "template_muo86hk", // ID do template para barbeiro
+  publicKey: "GxvelDMPKwTtGk66W",
+  serviceId: "service_xvxqplm",
+  templateClienteId: "template_l6zbofl",
+  templateBarbeiroId: "template_muo86hk",
 }
 
-// Email do barbeiro para receber notificações
 const BARBEIRO_EMAIL = "ytbgugu979@gmail.com"
-const BARBEIRO_WHATSAPP = "+5543984994564" // Formato internacional
+const BARBEIRO_WHATSAPP = "+5543984994564"
 
 // ============================================
 // INICIALIZAR EMAILJS
@@ -28,7 +22,7 @@ function initEmailJS() {
     emailjs.init(EMAILJS_CONFIG.publicKey)
     console.log("[v0] EmailJS inicializado")
   } else {
-    console.error("[v0] EmailJS não carregado. Adicione o script no HTML.")
+    console.error("[v0] EmailJS não carregado.")
   }
 }
 
@@ -59,7 +53,6 @@ function detectarProvedorEmail(email) {
 async function enviarEmailCliente(dadosAgendamento) {
   try {
     const provedor = detectarProvedorEmail(dadosAgendamento.email)
-    console.log(`[v0] Enviando email para cliente via ${provedor}: ${dadosAgendamento.email}`)
 
     const templateParams = {
       to_email: dadosAgendamento.email,
@@ -71,13 +64,16 @@ async function enviarEmailCliente(dadosAgendamento) {
       provedor: provedor,
     }
 
-    const response = await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateClienteId, templateParams)
+    const response = await emailjs.send(
+      EMAILJS_CONFIG.serviceId,
+      EMAILJS_CONFIG.templateClienteId,
+      templateParams
+    )
 
-    console.log("[v0] Email enviado para cliente com sucesso:", response)
     return { success: true, provedor }
   } catch (error) {
-    console.error("[v0] Erro ao enviar email para cliente:", error)
-    return { success: false, error: error.message }
+    console.error("Erro email cliente:", error)
+    return { success: false }
   }
 }
 
@@ -86,8 +82,6 @@ async function enviarEmailCliente(dadosAgendamento) {
 // ============================================
 async function enviarEmailBarbeiro(dadosAgendamento) {
   try {
-    console.log("[v0] Enviando email para barbeiro:", BARBEIRO_EMAIL)
-
     const templateParams = {
       to_email: BARBEIRO_EMAIL,
       to_name: "Barbeiro",
@@ -100,52 +94,42 @@ async function enviarEmailBarbeiro(dadosAgendamento) {
       time: dadosAgendamento.hora,
     }
 
-    const response = await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templateBarbeiroId, templateParams)
+    const response = await emailjs.send(
+      EMAILJS_CONFIG.serviceId,
+      EMAILJS_CONFIG.templateBarbeiroId,
+      templateParams
+    )
 
-    console.log("[v0] Email enviado para barbeiro com sucesso:", response)
     return { success: true }
   } catch (error) {
-    console.error("[v0] Erro ao enviar email para barbeiro:", error)
-    return { success: false, error: error.message }
+    console.error("Erro email barbeiro:", error)
+    return { success: false }
   }
 }
 
 // ============================================
-// ENVIAR WHATSAPP (VIA FIREBASE FUNCTIONS + TWILIO)
+// WHATSAPP (via Firebase + Twilio)
 // ============================================
-// Esta função chama uma Firebase Cloud Function que usa Twilio para enviar WhatsApp
 async function enviarWhatsApp(telefone, mensagem) {
   try {
-    console.log("[v0] Enviando WhatsApp para:", telefone)
-
-    // Chamar Firebase Cloud Function
-      const response = await fetch("https://barbearia-bitencourt.onrender.com/sendWhatsApp", {
+    const response = await fetch("https://barbearia-bitencourt.onrender.com/sendWhatsApp", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        to: telefone,
-        message: mensagem,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: telefone, message: mensagem }),
     })
 
     const result = await response.json()
 
-    if (result.success) {
-      console.log("[v0] WhatsApp enviado com sucesso")
-      return { success: true }
-    } else {
-      throw new Error(result.error)
-    }
+    if (result.success) return { success: true }
+    else throw new Error(result.error)
   } catch (error) {
-    console.error("[v0] Erro ao enviar WhatsApp:", error)
+    console.error("Erro WhatsApp:", error)
     return { success: false, error: error.message }
   }
 }
 
 // ============================================
-// ENVIAR WHATSAPP PARA CLIENTE
+// WHATSAPP CLIENTE (AGENDAMENTO)
 // ============================================
 async function enviarWhatsAppCliente(dadosAgendamento) {
   const mensagem = `
@@ -153,92 +137,143 @@ async function enviarWhatsAppCliente(dadosAgendamento) {
 
 Olá ${dadosAgendamento.nome}!
 
-Seu agendamento foi confirmado com sucesso:
+Seu agendamento foi confirmado:
 
 📅 *Data:* ${new Date(dadosAgendamento.data).toLocaleDateString("pt-BR")}
 🕐 *Horário:* ${dadosAgendamento.hora}
 ✂️ *Serviço:* ${dadosAgendamento.servico}
 👨 *Barbeiro:* ${dadosAgendamento.barbeiro}
 
-📍 Endereço: Av. Paulista, 1000 - São Paulo, SP
-
 Aguardamos você! 💈
-  `.trim()
+`.trim()
 
   return await enviarWhatsApp(dadosAgendamento.telefone, mensagem)
 }
 
 // ============================================
-// ENVIAR WHATSAPP PARA BARBEIRO
+// WHATSAPP BARBEIRO (AGENDAMENTO)
 // ============================================
 async function enviarWhatsAppBarbeiro(dadosAgendamento) {
   const mensagem = `
-🔔 *Novo Agendamento - Barbearia Bitencourt*
+🔔 *Novo Agendamento*
 
-📋 *Detalhes do Cliente:*
-👤 Nome: ${dadosAgendamento.nome}
-📧 Email: ${dadosAgendamento.email}
-📱 Telefone: ${dadosAgendamento.telefone || "Não informado"}
+👤 Cliente: ${dadosAgendamento.nome}
+📅 ${new Date(dadosAgendamento.data).toLocaleDateString("pt-BR")}
+🕐 ${dadosAgendamento.hora}
+✂️ Serviço: ${dadosAgendamento.servico}
 
-📅 *Data:* ${new Date(dadosAgendamento.data).toLocaleDateString("pt-BR")}
-🕐 *Horário:* ${dadosAgendamento.hora}
-✂️ *Serviço:* ${dadosAgendamento.servico}
-👨 *Barbeiro:* ${dadosAgendamento.barbeiro}
-
-Acesse o painel admin para mais detalhes.
-  `.trim()
+Confira no painel admin.
+`.trim()
 
   return await enviarWhatsApp(BARBEIRO_WHATSAPP, mensagem)
 }
 
 // ============================================
-// FUNÇÃO PRINCIPAL - ENVIAR TODAS AS NOTIFICAÇÕES
+// NOTIFICAÇÕES DE AGENDAMENTO
 // ============================================
 async function enviarNotificacoesAgendamento(dadosAgendamento) {
-  console.log("[v0] Iniciando envio de notificações para agendamento:", dadosAgendamento)
-
-  const resultados = {
-    emailCliente: { success: false },
-    emailBarbeiro: { success: false },
-    whatsappCliente: { success: false },
-    whatsappBarbeiro: { success: false },
-  }
-
   try {
-    // Enviar emails em paralelo
-    const [emailClienteResult, emailBarbeiroResult] = await Promise.all([
+    await Promise.all([
       enviarEmailCliente(dadosAgendamento),
       enviarEmailBarbeiro(dadosAgendamento),
     ])
 
-    resultados.emailCliente = emailClienteResult
-    resultados.emailBarbeiro = emailBarbeiroResult
-
-    // Enviar WhatsApp apenas se telefone estiver disponível
     if (dadosAgendamento.telefone) {
-      const [whatsappClienteResult, whatsappBarbeiroResult] = await Promise.all([
+      await Promise.all([
         enviarWhatsAppCliente(dadosAgendamento),
         enviarWhatsAppBarbeiro(dadosAgendamento),
       ])
-
-      resultados.whatsappCliente = whatsappClienteResult
-      resultados.whatsappBarbeiro = whatsappBarbeiroResult
-    } else {
-      console.warn("[v0] Telefone do cliente não informado, WhatsApp não enviado")
     }
-
-    console.log("[v0] Resultados das notificações:", resultados)
-    return resultados
   } catch (error) {
-    console.error("[v0] Erro ao enviar notificações:", error)
-    return resultados
+    console.error("Erro notificações agendamento:", error)
   }
 }
 
-// Exportar funções
+// ============================================
+// 📌 NOVA FUNÇÃO – NOTIFICAÇÕES DE CANCELAMENTO
+// ============================================
+async function enviarNotificacoesCancelamento(dados) {
+  const msgCliente = `
+❌ *Agendamento Cancelado*
+
+Olá ${dados.nome},
+Seu agendamento foi cancelado.
+
+📅 ${new Date(dados.data).toLocaleDateString("pt-BR")}
+🕐 ${dados.hora}
+✂️ ${dados.servico}
+
+Se precisar, pode reagendar pelo site.  
+`.trim()
+
+  const msgBarbeiro = `
+❌ *Agendamento Cancelado pelo Cliente*
+
+Cliente: ${dados.nome}
+Serviço: ${dados.servico}
+📅 ${new Date(dados.data).toLocaleDateString("pt-BR")}
+🕐 ${dados.hora}
+`.trim()
+
+  await enviarWhatsApp(dados.telefone, msgCliente)
+  await enviarWhatsApp(BARBEIRO_WHATSAPP, msgBarbeiro)
+
+  await enviarEmailCliente(dados)
+  await enviarEmailBarbeiro(dados)
+}
+
+// ============================================
+// 📌 NOVA FUNÇÃO – NOTIFICAÇÕES REMARCAÇÃO
+// ============================================
+async function enviarNotificacoesRemarcacao(antigo, novo) {
+  const msgCliente = `
+🔄 *Agendamento Remarcado*
+
+Olá ${novo.nome},
+
+Seu agendamento foi alterado:
+
+❌ *Antes:*  
+📅 ${new Date(antigo.data).toLocaleDateString("pt-BR")}  
+🕐 ${antigo.hora}
+
+✅ *Agora:*  
+📅 ${new Date(novo.data).toLocaleDateString("pt-BR")}  
+🕐 ${novo.hora}
+
+Serviço: ${novo.servico}
+Barbeiro: ${novo.barbeiro}
+`.trim()
+
+  const msgBarbeiro = `
+🔄 *Cliente Remarcou o Agendamento*
+
+Cliente: ${novo.nome}
+
+❌ Antes:
+${new Date(antigo.data).toLocaleDateString("pt-BR")} às ${antigo.hora}
+
+✅ Agora:
+${new Date(novo.data).toLocaleDateString("pt-BR")} às ${novo.hora}
+
+Serviço: ${novo.servico}
+`.trim()
+
+  await enviarWhatsApp(novo.telefone, msgCliente)
+  await enviarWhatsApp(BARBEIRO_WHATSAPP, msgBarbeiro)
+
+  await enviarEmailCliente(novo)
+  await enviarEmailBarbeiro(novo)
+}
+
+// ============================================
+// EXPORTS
+// ============================================
 export {
   initEmailJS,
   enviarNotificacoesAgendamento,
+  enviarNotificacoesCancelamento,
+  enviarNotificacoesRemarcacao,
   enviarEmailCliente,
   enviarEmailBarbeiro,
   enviarWhatsAppCliente,

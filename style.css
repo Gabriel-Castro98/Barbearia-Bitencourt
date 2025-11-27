@@ -185,3 +185,22 @@
     padding: 1rem;
   }
 }
+.more-dropdown-menu {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  position: absolute;
+  z-index: 50;
+}
+
+.more-dropdown-menu.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  background-color: #18181b; /* bg-zinc-900 */
+  border: 1px solid #27272a; /* border-zinc-800 */
+  border-radius: 0.5rem; /* rounded */
+  box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+
+}

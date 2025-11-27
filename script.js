@@ -462,32 +462,119 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-// ==================================================
-// ADMIN BTN VISIBILITY
-// ==================================================
-auth.onAuthStateChanged(async (user) => {
-  const adminBtn = document.getElementById("admin-btn");
-  const mobileAdminBtn = document.getElementById("mobile-admin-btn");
+// ============================
+// ELEMENTOS GLOBAIS
+// ============================
+const greeting = document.getElementById('user-greeting');
+const mobileGreeting = document.getElementById('mobile-user-greeting');
 
-  if (!user) {
-    adminBtn?.classList.add("hidden");
-    mobileAdminBtn?.classList.add("hidden");
-    return;
+const logoutBtns = [document.getElementById('logout-btn'), document.getElementById('mobile-logout-btn')];
+const loginBtns = [document.getElementById('login-btn'), document.getElementById('mobile-login-btn')];
+
+const adminBtn = document.getElementById("admin-btn");
+const mobileAdminBtn = document.getElementById("mobile-admin-btn");
+
+const btnDesktop = document.getElementById("btn-meus-agendamentos");
+const dropdownDesktop = document.getElementById("dropdown-agendamentos");
+const containerDesktop = document.getElementById("meus-agendamentos");
+
+const btnMobile = document.getElementById("mobile-btn-meus-agendamentos");
+const dropdownMobile = document.getElementById("mobile-dropdown-agendamentos");
+const containerMobile = document.getElementById("mobile-meus-agendamentos");
+
+// ============================
+// FUNÇÕES AUXILIARES
+// ============================
+function toggleDropdown(dropdown) {
+  dropdown.classList.toggle("hidden");
+}
+
+btnDesktop?.addEventListener("click", () => toggleDropdown(dropdownDesktop));
+btnMobile?.addEventListener("click", () => toggleDropdown(dropdownMobile));
+
+async function carregarAgendamentos(userId) {
+  if (!userId) return;
+
+  const q = query(collection(db, "agendamentos"), where("userId", "==", userId));
+  const snapshot = await getDocs(q);
+  const agendamentos = snapshot.docs.map(doc => doc.data());
+
+  function renderAgendamentos(container) {
+    if (!container) return;
+    container.innerHTML = "";
+    if (agendamentos.length === 0) {
+      container.innerHTML = `<p class="text-zinc-400">Você ainda não possui agendamentos.</p>`;
+      return;
+    }
+    agendamentos.forEach(a => {
+      const div = document.createElement("div");
+      div.className = "bg-zinc-800 p-3 rounded-lg border border-zinc-700 mb-2";
+      div.innerHTML = `
+        <p><span class="font-semibold text-amber-500">Serviço:</span> ${a.servico}</p>
+        <p><span class="font-semibold text-amber-500">Barbeiro:</span> ${a.barbeiro}</p>
+        <p><span class="font-semibold text-amber-500">Data:</span> ${a.data}</p>
+        <p><span class="font-semibold text-amber-500">Horário:</span> ${a.horario}</p>
+      `;
+      container.appendChild(div);
+    });
   }
 
-  try {
-    const userDoc = await getDoc(doc(db, "usuarios", user.uid));
-    if (userDoc.exists() && userDoc.data().role === "admin") {
-      adminBtn?.classList.remove("hidden");
-      mobileAdminBtn?.classList.remove("hidden");
-    } else {
+  renderAgendamentos(containerDesktop);
+  renderAgendamentos(containerMobile);
+}
+
+// ============================
+// CONTROLE DE AUTENTICAÇÃO
+// ============================
+onAuthStateChanged(auth, async (user) => {
+
+  if (user) {
+    const nome = user.displayName || "Cliente";
+
+    // Saudações
+    if (greeting) greeting.textContent = `Olá, ${nome}`;
+    if (mobileGreeting) mobileGreeting.textContent = `Olá, ${nome}`;
+
+    // Login/Logout
+    logoutBtns.forEach(b => b?.classList.remove("hidden"));
+    loginBtns.forEach(b => b?.classList.add("hidden"));
+
+    // Mostrar "Meus Agendamentos"
+    btnDesktop?.classList.remove("hidden");
+    btnMobile?.classList.remove("hidden");
+    carregarAgendamentos(user.uid);
+
+    // Verifica se é admin
+    try {
+      const ref = doc(db, "usuarios", user.uid);
+      const snap = await getDoc(ref);
+      if (snap.exists() && snap.data().role === "admin") {
+        adminBtn?.classList.remove("hidden");
+        mobileAdminBtn?.classList.remove("hidden");
+      } else {
+        adminBtn?.classList.add("hidden");
+        mobileAdminBtn?.classList.add("hidden");
+      }
+    } catch (err) {
+      console.error("Erro ao verificar admin:", err);
       adminBtn?.classList.add("hidden");
       mobileAdminBtn?.classList.add("hidden");
     }
-  } catch (err) {
-    console.error("Erro ao verificar admin:", err);
+
+  } else {
+    // Usuário não logado
+    if (greeting) greeting.textContent = "";
+    if (mobileGreeting) mobileGreeting.textContent = "";
+
+    logoutBtns.forEach(b => b?.classList.add("hidden"));
+    loginBtns.forEach(b => b?.classList.remove("hidden"));
+
+    btnDesktop?.classList.add("hidden");
+    btnMobile?.classList.add("hidden");
     adminBtn?.classList.add("hidden");
     mobileAdminBtn?.classList.add("hidden");
+
+    if (containerDesktop) containerDesktop.innerHTML = "";
+    if (containerMobile) containerMobile.innerHTML = "";
   }
 });
-  
