@@ -5,102 +5,93 @@
 <title>Painel Admin - Barbearia Bitencourt</title>
 <link href="dist/output.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+<link rel="stylesheet" href="style.css">
 <style>
 body { font-family: 'Poppins', sans-serif; }
-@keyframes fadeIn {
-from { opacity: 0; transform: translateY(-10px); }
-to { opacity: 1; transform: translateY(0); }
-}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 .animate-fadeIn { animation: fadeIn 0.3s ease forwards; }
 .filter-active { background:#fbbf24 !important; color:#000 !important; }
 .date-active { background:#fbbf24 !important; color:#000 !important; }
 .sort-active { background:#4f46e5 !important; }
+.chart-box {
+  position: relative;
+  width: 100%;
+  height: 260px; /* altura ideal */
+}
+
+@media (min-width: 768px) {
+  .chart-box {
+    height: 320px; /* em telas maiores */
+  }
+}
 </style>
-<!-- Flatpickr CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-
-<!-- Tema DARK do Flatpickr -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
-
-<!-- Flatpickr JS -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-zinc-950 text-zinc-50">
-
 
 <header class="bg-zinc-900 border-b border-zinc-800 px-6 py-4 relative">
 <div class="flex items-center justify-between">
 <h1 class="text-2xl font-bold">Painel <span class="text-amber-500">Administrativo</span></h1>
 
-
 <nav class="hidden md:flex items-center gap-6">
 <a href="#agendamentos" class="text-zinc-300 hover:text-amber-500 transition">Agendamentos</a>
 <a href="#estatisticas" class="text-zinc-300 hover:text-amber-500 transition">Estatísticas</a>
 <a href="index.html" class="text-zinc-300 hover:text-amber-500 transition">Área do Cliente</a>
-<button id="logout-btn" class="text-red-400 hover:text-red-300 transition-colors">Sair</button>
+<button data-action="logout" class="text-red-400 hover:text-red-300 transition-colors">Sair</button>
 </nav>
 
-<button id="menu-btn" class="md:hidden flex flex-col justify-between w-6 h-5">
+<button data-action="menu-toggle" class="md:hidden flex flex-col justify-between w-6 h-5">
 <span class="w-full h-0.5 bg-zinc-300 rounded"></span>
 <span class="w-full h-0.5 bg-zinc-300 rounded"></span>
 <span class="w-full h-0.5 bg-zinc-300 rounded"></span>
 </button>
 </div>
 
-
 <nav id="mobile-menu" class="hidden flex-col bg-zinc-900 border-t border-zinc-800 mt-4 p-4 space-y-3 md:hidden rounded-xl">
 <a href="#agendamentos" class="block text-zinc-300 hover:text-amber-500 transition">Agendamentos</a>
 <a href="#estatisticas" class="block text-zinc-300 hover:text-amber-500 transition">Estatísticas</a>
 <a href="index.html" class="block text-zinc-300 hover:text-amber-500 transition">Área do Cliente</a>
-<button id="logout-btn-mobile" class="text-red-400 hover:text-red-300 transition-colors">Sair</button>
+<button data-action="logout" class="text-red-400 hover:text-red-300 transition-colors">Sair</button>
 </nav>
 </header>
 
 <main class="flex-1 p-6 space-y-6">
-  <!-- ESTATÍSTICAS -->
-  <div id="estatisticas" class="grid md:grid-cols-4 gap-6">
-    <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
-      <h3 class="text-zinc-400 text-sm mb-2">Hoje</h3>
-      <p id="stat-today" class="text-3xl font-bold">0</p>
-    </div>
-    <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
-      <h3 class="text-zinc-400 text-sm mb-2">Confirmados</h3>
-      <p id="stat-confirmed" class="text-3xl font-bold">0</p>
-    </div>
-    <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
-      <h3 class="text-zinc-400 text-sm mb-2">Total</h3>
-      <p id="stat-total" class="text-3xl font-bold">0</p>
-    </div>
-  </div>
 
-  <!-- FILTROS -->
-  <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-4">
-    <div class="flex flex-wrap gap-3">
-      <button onclick="setDateFilter('all', event)" class="date-btn bg-zinc-800 px-4 py-2 rounded transition">Todos</button>
-      <button onclick="setDateFilter('today', event)" class="date-btn bg-zinc-800 px-4 py-2 rounded">Hoje</button>
-      <button onclick="setDateFilter('tomorrow', event)" class="date-btn bg-zinc-800 px-4 py-2 rounded">Amanhã</button>
-      <button onclick="setDateFilter('week', event)" class="date-btn bg-zinc-800 px-4 py-2 rounded">Semana</button>
-      <button onclick="setDateFilter('month', event)" class="date-btn bg-zinc-800 px-4 py-2 rounded">Mês</button>
+<!-- ESTATÍSTICAS -->
+<div id="estatisticas" class="grid md:grid-cols-4 gap-6">
+  <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800"><h3 class="text-zinc-400 text-sm mb-2">Hoje</h3><p id="stat-today" class="text-3xl font-bold">0</p></div>
+  <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800"><h3 class="text-zinc-400 text-sm mb-2">Confirmados</h3><p id="stat-confirmed" class="text-3xl font-bold">0</p></div>
+  <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800"><h3 class="text-zinc-400 text-sm mb-2">Total</h3><p id="stat-total" class="text-3xl font-bold">0</p></div>
+</div>
 
-      <input type="text" id="start-range" class="bg-zinc-800 px-3 py-2 rounded" placeholder="Início">
-      <input type="text" id="end-range" class="bg-zinc-800 px-3 py-2 rounded" placeholder="Fim">
-      <button onclick="applyCustomRange()" class="bg-amber-500 text-black px-4 py-2 rounded">Filtrar</button>
-    </div>
+<!-- FILTROS -->
+<div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-4">
+<div class="flex flex-wrap gap-3">
+  <button data-date="all" class="date-btn bg-zinc-800 px-4 py-2 rounded transition">Todos</button>
+  <button data-date="today" class="date-btn bg-zinc-800 px-4 py-2 rounded">Hoje</button>
+  <button data-date="tomorrow" class="date-btn bg-zinc-800 px-4 py-2 rounded">Amanhã</button>
+  <button data-date="week" class="date-btn bg-zinc-800 px-4 py-2 rounded">Semana</button>
+  <button data-date="month" class="date-btn bg-zinc-800 px-4 py-2 rounded">Mês</button>
 
-    <div class="flex flex-wrap gap-3 items-center mt-2">
-      <button onclick="filterBookings('all', event)" class="filter-btn filter-active px-4 py-2 rounded">Todos</button>
-      <button onclick="filterBookings('confirmado', event)" class="filter-btn bg-zinc-800 px-4 py-2 rounded">Confirmados</button>
-      <button onclick="filterBookings('concluido', event)" class="filter-btn bg-zinc-800 px-4 py-2 rounded">Concluídos</button>
+  <input type="text" id="start-range" class="bg-zinc-800 px-3 py-2 rounded" placeholder="Início">
+  <input type="text" id="end-range" class="bg-zinc-800 px-3 py-2 rounded" placeholder="Fim">
+  <button data-action="apply-range" class="bg-amber-500 text-black px-4 py-2 rounded">Filtrar</button>
+</div>
 
-      <button onclick="setSort('newest', event)" class="sort-btn bg-zinc-800 px-4 py-2 rounded">⬆️ Mais novos</button>
-      <button onclick="setSort('oldest', event)" class="sort-btn bg-zinc-800 px-4 py-2 rounded">⬇️ Mais antigos</button>
+<div class="flex flex-wrap gap-3 items-center mt-2">
+  <button data-status="all" class="filter-btn filter-active px-4 py-2 rounded">Todos</button>
+  <button data-status="confirmado" class="filter-btn bg-zinc-800 px-4 py-2 rounded">Confirmados</button>
+  <button data-status="concluido" class="filter-btn bg-zinc-800 px-4 py-2 rounded">Concluídos</button>
 
-      <input type="text" id="search-input" placeholder="Buscar por nome, data ou serviço..." class="flex-1 min-w-[250px] bg-zinc-800 border border-zinc-700 rounded px-4 py-2">
-    </div>
-  </div>
+  <button data-sort="newest" class="sort-btn bg-zinc-800 px-4 py-2 rounded">⬆️ Mais novos</button>
+  <button data-sort="oldest" class="sort-btn bg-zinc-800 px-4 py-2 rounded">⬇️ Mais antigos</button>
+
+  <input type="text" id="search-input" placeholder="Buscar por nome, data ou serviço..." class="flex-1 min-w-[250px] bg-zinc-800 border border-zinc-700 rounded px-4 py-2">
+</div>
+</div>
+
 
   <!-- AGENDAMENTOS (moved acima das métricas e gráficos) -->
   <section id="agendamentos" class="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
@@ -149,42 +140,65 @@ to { opacity: 1; transform: translateY(0); }
     </div>
   </div>
 
- <!-- GRÁFICOS DASHBOARD MASTER -->
-<div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-6 mt-6">
-  <h2 class="text-xl font-bold text-zinc-100 mb-4">Gráficos de Agendamentos</h2>
+  <!-- GRÁFICOS DASHBOARD MASTER -->
+  <div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-6 mt-6">
+    <h2 class="text-xl font-bold text-zinc-100 mb-4">Gráficos de Agendamentos</h2>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <!-- Gráfico 1: Agendamentos por dia -->
-    <div class="bg-zinc-800 p-3 rounded-xl h-[180px] md:h-[250px]">
-      <h3 class="text-zinc-300 font-semibold mb-1 text-sm md:text-base">Agendamentos por Dia</h3>
-      <canvas id="chart-agendamentos-dia"></canvas>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Gráfico 1: Agendamentos por dia -->
+        <div class="bg-zinc-800 p-3 rounded-xl">
+      <h3 class="text-zinc-300 font-semibold mb-2 text-sm md:text-base">
+        Agendamentos por Dia
+      </h3>
+      <div class="chart-box">
+        <canvas id="chart-agendamentos-dia"></canvas>
+      </div>
     </div>
+
 
     <!-- Gráfico 2: Serviços mais populares -->
-    <div class="bg-zinc-800 p-3 rounded-xl h-[180px] md:h-[250px]">
-      <h3 class="text-zinc-300 font-semibold mb-1 text-sm md:text-base">Serviços Mais Populares</h3>
-      <canvas id="chart-servicos-populares"></canvas>
-    </div>
+    <div class="bg-zinc-800 p-3 rounded-xl">
+  <h3 class="text-zinc-300 font-semibold mb-2 text-sm md:text-base">
+    Serviços Mais Populares
+  </h3>
+  <div class="chart-box">
+    <canvas id="chart-servicos-populares"></canvas>
+  </div>
+</div>
+
 
     <!-- Gráfico 3: Cancelamentos este mês -->
-    <div class="bg-zinc-800 p-3 rounded-xl h-[180px] md:h-[250px]">
-      <h3 class="text-zinc-300 font-semibold mb-1 text-sm md:text-base">Cancelamentos Este Mês</h3>
-      <canvas id="chart-cancelamentos"></canvas>
-    </div>
+    <div class="bg-zinc-800 p-3 rounded-xl">
+  <h3 class="text-zinc-300 font-semibold mb-2 text-sm md:text-base">
+    Cancelamentos Este Mês
+  </h3>
+  <div class="chart-box">
+    <canvas id="chart-cancelamentos"></canvas>
+  </div>
+</div>
+
 
     <!-- Gráfico 4: Clientes VIP -->
-    <div class="bg-zinc-800 p-3 rounded-xl h-[180px] md:h-[250px]">
-      <h3 class="text-zinc-300 font-semibold mb-1 text-sm md:text-base">Clientes VIP</h3>
-      <canvas id="chart-clientes-vip"></canvas>
-    </div>
+    <div class="bg-zinc-800 p-3 rounded-xl">
+  <h3 class="text-zinc-300 font-semibold mb-2 text-sm md:text-base">
+    Clientes VIP
+  </h3>
+  <div class="chart-box">
+    <canvas id="chart-clientes-vip"></canvas>
   </div>
+</div>
+
 
   <!-- Gráfico de faturamento full width -->
-  <div class="bg-zinc-800 p-4 rounded-xl mt-4 h-[180px] md:h-[250px]">
-    <h3 class="text-zinc-300 font-semibold mb-2 text-sm md:text-base">Faturamento Últimos 30 Dias</h3>
+  <div class="bg-zinc-800 p-4 rounded-xl">
+  <h3 class="text-zinc-300 font-semibold mb-2 text-sm md:text-base">
+    Faturamento Últimos 30 Dias
+  </h3>
+  <div class="chart-box">
     <canvas id="chart-faturamento"></canvas>
   </div>
 </div>
+
 <!-- RELATÓRIO DE CLIENTES -->
 <section id="relatorio-clientes" class="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden mt-6">
   <div class="p-6 border-b border-zinc-800">
@@ -259,9 +273,13 @@ to { opacity: 1; transform: translateY(0); }
 
     <!-- COMPARATIVO MENSAL -->
     <div class="bg-zinc-800 p-4 rounded-xl">
-      <h3 class="text-zinc-300 font-semibold mb-2">Comparativo Mês Atual vs Mês Passado</h3>
-      <canvas id="chart-servicos-mensal"></canvas>
-    </div>
+  <h3 class="text-zinc-300 font-semibold mb-2 text-sm md:text-base">
+    Comparativo Mês Atual vs Mês Passado
+  </h3>
+  <div class="chart-box">
+    <canvas id="chart-servicos-mensal"></canvas>
+  </div>
+</div>
 
   </div>
 </section>
@@ -272,1154 +290,21 @@ to { opacity: 1; transform: translateY(0); }
 <p>Desenvolvido por Gabriel Castro</p>
 </footer>
 
-  <!-- SCRIPT -->
-  <script type="module">
-    import { auth, db } from "./firebase-config.js";
-    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-    import { collection, query, onSnapshot, doc, updateDoc, deleteDoc, orderBy, getDoc } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
-
-    let allBookings = [];
-    let currentFilter = "all";
-    let dateFilter = "all";
-    let customStart = null;
-    let customEnd = null;
-    let sortOrder = "newest";
-
-    // util: converte possivelmente Timestamp do Firestore para Date
-    function toDate(value) {
-      if (!value) return null;
-      // Firestore Timestamp has .toDate()
-      if (typeof value === "object" && typeof value.toDate === "function") {
-        return value.toDate();
-      }
-      // if it's already a Date
-      if (value instanceof Date) return value;
-      // fallback - try parse
-      const parsed = new Date(value);
-      return isNaN(parsed) ? null : parsed;
-    }
-
-    function applyDateFilter(bookings) {
-      const now = new Date();
-      const todayStr = now.toISOString().split("T")[0];
-
-      return bookings.filter((b) => {
-        const d = toDate(b.data);
-        if (!d) return false;
-
-        const dISO = d.toISOString().split("T")[0];
-
-        switch (dateFilter) {
-          case "today":
-            return dISO === todayStr;
-
-          case "tomorrow":
-            const tomorrow = new Date(now);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            return dISO === tomorrow.toISOString().split("T")[0];
-
-          case "week":
-            const weekFromNow = new Date(now);
-            weekFromNow.setDate(weekFromNow.getDate() + 7);
-            return d >= now && d <= weekFromNow;
-
-          case "month":
-            return (
-              d.getMonth() === now.getMonth() &&
-              d.getFullYear() === now.getFullYear()
-            );
-
-          case "range":
-            if (!customStart || !customEnd) return true;
-            // normalize times so inclusive of end day
-            const start = new Date(customStart);
-            start.setHours(0,0,0,0);
-            const end = new Date(customEnd);
-            end.setHours(23,59,59,999);
-            return d >= start && d <= end;
-
-          default:
-            return true;
-        }
-      });
-    }
-
-   // 🔒 Proteção silenciosa baseada em "role"
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = "login.html";
-      return;
-    }
-
-    try {
-      const userDocRef = doc(db, "usuarios", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (!userDocSnap.exists() || userDocSnap.data().role !== "admin") {
-        console.log("🚫 Acesso negado: usuário não é admin.");
-        window.location.href = "index.html";
-        return;
-      }
-
-      console.log("✅ Acesso concedido: usuário é admin.");
-      loadBookings(); // Só carrega dados se for admin
-
-    } catch (err) {
-      console.error("Erro ao verificar o role do usuário:", err);
-      window.location.href = "index.html";
-    }
-  });
-
-   /* ==============================
-   CARREGAMENTO EM TEMPO REAL DOS AGENDAMENTOS
-   ============================== */
-function loadBookings() {
-  const agendamentosRef = collection(db, "agendamentos");
-
-  // Ordena por data e hora (mantém lista organizada automaticamente)
-  const q = query(
-    agendamentosRef,
-    orderBy("data", "asc"),
-    orderBy("hora", "asc")
-  );
-
-  onSnapshot(q, (snapshot) => {
-    allBookings = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
-    // Atualiza tudo em tempo real
-    updateStats();      // Atualiza os cartões de "Total / Hoje / Semana / Mês"
-    renderBookings();   // Renderiza a tabela/lista de agendamentos
-    atualizarRelatorios(); // Se existir seção de relatórios, ela atualiza também
-  });
-}
-
-    const servicos = [
-  { nome: "Corte", preco: 30 },
-  { nome: "Corte e Barba", preco: 60 },
-  { nome: "Barba Completa", preco: 40 },
-  { nome: "Corte + Alisamento", preco: 60 },
-  { nome: "Corte + Barba + Alisamento", preco: 80 },
-  { nome: "Corte + Barba + Pigmentacao", preco: 70 },
-  { nome: "Sobrancelha na Navalha", preco: 5 },
-  { nome: "Bigode na Navalha", preco: 5 },
-  { nome: "Risquinho Simples", preco: 5 },
-  { nome: "Bigode e Cavanhaque", preco: 10 },
-];
-
-    function updateStats() {
-  const todayStr = new Date().toISOString().split("T")[0];
-
-  // --- AGENDAMENTOS DE HOJE ---
-  const createdToday = allBookings.filter((b) => {
-    if (!b.criadoEm || !b.criadoEm.toDate) return false;
-    const d = b.criadoEm.toDate().toISOString().split("T")[0];
-    return d === todayStr;
-  });
-
-  document.getElementById("stat-today").textContent = createdToday.length;
-  document.getElementById("stat-confirmed").textContent =
-    allBookings.filter((b) => b.status === "confirmado").length;
-  document.getElementById("stat-total").textContent = allBookings.length;
-
-  // --- APLICAR OS MESMOS FILTROS DO RENDER ---
-  let filtered = applyDateFilter(allBookings).filter(
-    (b) => b.status && b.status.trim() !== ""
-  );
-
-  if (currentFilter !== "all") {
-    filtered = filtered.filter((b) => b.status === currentFilter);
-  }
-
-  // --- FATURAMENTO TOTAL ---
-  let totalRevenue = 0;
-
-  filtered.forEach((b) => {
-    if (!b.servico) return;
-
-    // Multiple services (array)
-    if (Array.isArray(b.servico)) {
-      b.servico.forEach((s) => {
-        const serv = servicos.find((x) => x.nome === s);
-        if (serv) totalRevenue += serv.preco;
-      });
-    } else {
-      // Single service (string)
-      const serv = servicos.find((x) => x.nome === b.servico);
-      if (serv) totalRevenue += serv.preco;
-    }
-  });
-
-  document.getElementById("stat-revenue").textContent =
-    `R$ ${totalRevenue.toFixed(2)}`;
-
-  // --- TICKET MÉDIO ---
-  const ticket = filtered.length ? totalRevenue / filtered.length : 0;
-  document.getElementById("stat-ticket").textContent =
-    `R$ ${ticket.toFixed(2)}`;
-
-  // --- CLIENTES ÚNICOS ---
-  const unique = new Set(filtered.map((b) => b.email));
-  document.getElementById("stat-clients").textContent = unique.size;
-
-  // --- SERVIÇO MAIS AGENDADO ---
-  const countServices = {};
-
-  filtered.forEach((b) => {
-    if (Array.isArray(b.servico)) {
-      b.servico.forEach((s) => {
-        countServices[s] = (countServices[s] || 0) + 1;
-      });
-    } else {
-      countServices[b.servico] = (countServices[b.servico] || 0) + 1;
-    }
-  });
-
-  const topService =
-    Object.entries(countServices).sort((a, b) => b[1] - a[1])[0]?.[0] || "—";
-
-  document.getElementById("stat-top-service").textContent = topService;
-
-  // --- HORÁRIO MAIS MOVIMENTADO ---
-  const countHours = {};
-
-  filtered.forEach((b) => {
-    if (!b.horario) return;
-    countHours[b.horario] = (countHours[b.horario] || 0) + 1;
-  });
-
-  const topHour =
-    Object.entries(countHours).sort((a, b) => b[1] - a[1])[0]?.[0] || "—";
-
-  document.getElementById("stat-top-hour").textContent = topHour;
-}
-
-    function renderBookings() {
-  const tbody = document.getElementById("bookings-table");
-  const searchTerm = (document.getElementById("search-input").value || "").toLowerCase();
-  let filtered = allBookings.slice();
-
-  // Aplica filtro por data (usa toDate internamente)
-  filtered = applyDateFilter(filtered);
-
-  // Remove resultados sem status (status = "" ou undefined)
-  filtered = filtered.filter((b) => b.status && String(b.status).trim() !== "");
-
-  // Aplica filtro de status (todos / confirmado / concluido)
-  if (currentFilter !== "all") filtered = filtered.filter((b) => b.status === currentFilter);
-
-  // Busca inteligente
-  if (searchTerm) {
-    filtered = filtered.filter((b) => {
-      const search = searchTerm;
-
-      const nome = (b.nome || "").toString().toLowerCase();
-      const servico = Array.isArray(b.servico)
-        ? b.servico.join(", ").toLowerCase()
-        : String(b.servico || "").toLowerCase();
-      const barbeiro = (b.barbeiro || "").toString().toLowerCase();
-      const hora = (b.horario || b.hora || "").toString().toLowerCase();
-
-      let dataBR = "";
-      let dataISO = "";
-      let diaMes = "";
-      let mesAno = "";
-      let dia = "";
-
-      const d = toDate(b.data);
-      if (d) {
-        dataBR = d.toLocaleDateString("pt-BR");
-        dataISO = d.toISOString().split("T")[0];
-        const parts = dataBR.split("/");
-        if (parts.length === 3) {
-          const [dd, mm, yyyy] = parts;
-          diaMes = `${dd}/${mm}`;
-          mesAno = `${mm}/${yyyy}`;
-          dia = dd;
-        }
-      }
-
-      return (
-        nome.includes(search) ||
-        servico.includes(search) ||
-        barbeiro.includes(search) ||
-        hora.includes(search) ||
-        dataBR.includes(search) ||
-        dataISO.includes(search) ||
-        diaMes.includes(search) ||
-        mesAno.includes(search) ||
-        dia.includes(search)
-      );
-    });
-  }
-
-  // Ordenação por data
-  filtered.sort((a, b) => {
-    const da = toDate(a.data);
-    const db = toDate(b.data);
-
-    if (!da || !db) return 0;
-
-    return sortOrder === "newest" ? db - da : da - db;
-  });
-
-  if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-zinc-500">Nenhum agendamento encontrado.</td></tr>`;
-    return;
-  }
-
-  const statusColors = {
-    confirmado: "bg-green-500/10 text-green-500 border-green-500",
-    concluido: "bg-blue-500/10 text-blue-500 border-blue-500",
-    cancelado: "bg-red-500/10 text-red-500 border-red-500",
-  };
-
-  tbody.innerHTML = filtered
-    .map((b) => {
-      const dataDisplay = (() => {
-        const d = toDate(b.data);
-        return d ? d.toLocaleDateString("pt-BR") : "-";
-      })();
-
-      const horarioDisplay = b.horario || b.hora || "—";
-      const badgeClass = statusColors[b.status] || "bg-zinc-700 text-zinc-300 border-zinc-700";
-
-      // NOTE: more-menu-<id> is generated per-row; toggleMoreMenu(event,id) will open/close it
-      return `
-        <tr class="hover:bg-zinc-800/50 transition">
-          <td class="px-6 py-4"><div class="font-medium">${b.nome || "-"}</div><div class="text-sm text-zinc-500">${b.email || ""}</div></td>
-          <td class="px-6 py-4">${Array.isArray(b.servico) ? b.servico.join(", ") : (b.servico || "-")}</td>
-          <td class="px-6 py-4">${b.barbeiro || "-"}</td>
-          <td class="px-6 py-4"><div>${dataDisplay}</div><div class="text-sm text-zinc-500">${horarioDisplay}</div></td>
-          <td class="px-6 py-4">${b.telefone || "-"}</td>
-          <td class="px-6 py-4"><span class="px-3 py-1 rounded-full text-xs font-medium border ${badgeClass}">${(b.status || "").charAt(0).toUpperCase() + (b.status || "").slice(1)}</span></td>
-          <td class="px-6 py-4">
-            <div class="flex gap-2 items-center relative">
-              ${b.status === "confirmado" ? `<button onclick="updateStatus('${b.id}','concluido')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">Concluir</button>` : ""}
-              <button onclick="deleteBooking('${b.id}')" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">Excluir</button>
-
-              <div class="relative">
-                <button class="px-3 py-1 bg-zinc-800 text-zinc-200 rounded" onclick="toggleMoreMenu(event, '${b.id}')">
-                  Ações ▾
-                </button>
-
-                <div id="more-menu-${b.id}" class="more-dropdown-menu mt-2 right-0">
-                  <button class="block w-full text-left px-3 py-2 rounded hover:bg-zinc-900" onclick="abrirModalRemarcar('${b.id}')">📆 Remarcar</button>
-                  <button class="block w-full text-left px-3 py-2 rounded hover:bg-zinc-900" onclick="abrirModalServicos('${b.id}')">🧩 Alterar serviços</button>
-                  <button class="block w-full text-left px-3 py-2 rounded hover:bg-zinc-900" onclick="abrirModalObservacoes('${b.id}')">📝 Observações</button>
-                  <button class="block w-full text-left px-3 py-2 rounded hover:bg-zinc-900" onclick="abrirModalHistorico('${b.email}')">🔍 Histórico</button>
-                  <hr class="my-1"/>
-                  <button class="block w-full text-left px-3 py-2 rounded hover:bg-zinc-900" onclick="enviarWhatsAppImediatoById('${b.id}')">💬 WhatsApp</button>
-                  <button class="block w-full text-left px-3 py-2 rounded hover:bg-zinc-900" onclick="enviarEmailImediatoById('${b.id}')">✉️ Enviar e-mail</button>
-                  <div class="px-3 py-2">
-                    <label class="flex items-center gap-2 text-sm">
-                      <input type="checkbox" onchange="toggleReminders('${b.id}', this.checked, document.querySelector('#remind-dayof-${b.id}')?.checked)" ${b.reminders?.dayBefore ? "checked":""}/> Lembrar dia anterior (08:00)
-                    </label>
-                    <label class="flex items-center gap-2 text-sm mt-1">
-                      <input id="remind-dayof-${b.id}" type="checkbox" onchange="toggleReminders('${b.id}', document.querySelector('#remind-dayof-${b.id}')?.checked, this.checked)" ${b.reminders?.dayOf ? "checked":""}/> Lembrar no dia (08:00)
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
-}
-
-    window.updateStatus = async function (id, status) {
-      await updateDoc(doc(db, "agendamentos", id), { status });
-    };
-
-    window.deleteBooking = async function (id) {
-      if (!confirm("Tem certeza que deseja excluir este agendamento?")) return;
-      await deleteDoc(doc(db, "agendamentos", id));
-    };
-
-    window.filterBookings = function (filter, event) {
-      currentFilter = filter;
-
-      // Limpa campo de busca sempre que mudar filtro
-      document.getElementById("search-input").value = "";
-
-      document.querySelectorAll(".filter-btn").forEach((btn) => {
-        btn.classList.remove("bg-amber-500", "text-zinc-950");
-        btn.classList.add("bg-zinc-800", "text-zinc-300");
-      });
-
-      if (event && event.target) {
-        event.target.classList.remove("bg-zinc-800", "text-zinc-300");
-        event.target.classList.add("bg-amber-500", "text-zinc-950");
-      }
-
-      renderBookings();
-    };
-
-    document.getElementById("search-input").addEventListener("input", renderBookings);
-
-    // =========================
-    // 🔽 ORDENAÇÃO (MAIS NOVOS / ANTIGOS)
-    // =========================
-    window.setSort = function(type, event) {
-      sortOrder = type;
-
-      // Estilo visual do botão ativo
-      document.querySelectorAll(".sort-btn").forEach(btn => {
-        btn.classList.remove("sort-active");
-      });
-
-      if (event && event.target) {
-        event.target.classList.add("sort-active");
-      }
-
-      renderBookings();
-    };
-
-    // =========================
-    // 📅 BOTÕES DO FILTRO DE DATA
-    // =========================
-    window.setDateFilter = function (filter, event) {
-      dateFilter = filter;
-
-      document.querySelectorAll(".date-btn").forEach((btn) => {
-        btn.classList.remove("bg-amber-500", "text-black");
-        btn.classList.add("bg-zinc-800");
-      });
-
-      if (event && event.target) {
-        event.target.classList.remove("bg-zinc-800");
-        event.target.classList.add("bg-amber-500", "text-black");
-      }
-
-      renderBookings();
-    };
-
-    window.applyCustomRange = function () {
-      const start = document.getElementById("start-range").value;
-      const end = document.getElementById("end-range").value;
-
-      if (!start || !end) {
-        alert("Selecione as duas datas.");
-        return;
-      }
-
-      customStart = new Date(start + "T00:00:00");
-      customEnd   = new Date(end   + "T23:59:59");
-
-      dateFilter = "range";
-      renderBookings();
-    };
-
-    // 🍔 Menu hambúrguer com animação
-    const menuBtn = document.getElementById("menu-btn");
-    const mobileMenu = document.getElementById("mobile-menu");
-    const logoutBtnMobile = document.getElementById("logout-btn-mobile");
-    const logoutBtn = document.getElementById("logout-btn"); // 👈 botão desktop
-
-    menuBtn.addEventListener("click", () => {
-      mobileMenu.classList.toggle("hidden");
-      if (!mobileMenu.classList.contains("hidden")) {
-        mobileMenu.classList.add("animate-fadeIn");
-      }
-    });
-
-    // 📱 Logout (mobile)
-    if (logoutBtnMobile) {
-      logoutBtnMobile.addEventListener("click", async () => {
-        await signOut(auth);
-        window.location.href = "login.html";
-      });
-    }
-
-    // 💻 Logout (desktop)
-    if (logoutBtn) {
-      logoutBtn.addEventListener("click", async () => {
-        await signOut(auth);
-        window.location.href = "login.html";
-      });
-    }
-    // Função para atualizar gráficos
-function atualizarGraficos() {
-  const bookingsFiltered = applyDateFilter(allBookings);
-
-  // ===============================
-  // 1) 📊 AGENDAMENTOS POR DIA
-  // ===============================
-  const dias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-  const contagemDias = [0,0,0,0,0,0,0];
-
-  bookingsFiltered.forEach(b => {
-    const d = toDate(b.data);
-    if (d) contagemDias[d.getDay()]++;
-  });
-
-  new Chart(document.getElementById('chart-agendamentos-dia'), {
-    type: 'bar',
-    data: {
-      labels: dias,
-      datasets: [{
-        label: 'Agendamentos',
-        data: contagemDias,
-        backgroundColor: '#f59e0b'
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true } }
-    }
-  });
-
-  // ===============================
-  // 2) 🧩 SERVIÇOS MAIS POPULARES
-  // ===============================
-  const contagemServicos = {};
-  bookingsFiltered.forEach(b => {
-    if (!b.servico) return;
-
-    if (Array.isArray(b.servico)) {
-      b.servico.forEach(s => contagemServicos[s] = (contagemServicos[s] || 0)+1);
-    } else {
-      contagemServicos[b.servico] = (contagemServicos[b.servico] || 0)+1;
-    }
-  });
-
-  new Chart(document.getElementById('chart-servicos-populares'), {
-    type: 'pie',
-    data: {
-      labels: Object.keys(contagemServicos),
-      datasets: [{
-        data: Object.values(contagemServicos),
-        backgroundColor: [
-          '#f59e0b','#10b981','#3b82f6','#ef4444',
-          '#8b5cf6','#06b6d4','#f472b6','#facc15'
-        ]
-      }]
-    },
-    options: { responsive: true }
-  });
-
-  // ===============================
-  // 3) 💰 FATURAMENTO 30 DIAS
-  // ===============================
-  const today = new Date();
-  const datasUltimos30 = Array.from({length:30}, (_,i)=>{
-    const d = new Date(today);
-    d.setDate(today.getDate()-29+i);
-    return d.toISOString().split('T')[0];
-  });
-
-  const faturamento = datasUltimos30.map(dStr => {
-    return bookingsFiltered.reduce((acc,b)=>{
-      const bData = toDate(b.data);
-      if (!bData) return acc;
-
-      const bStr = bData.toISOString().split("T")[0];
-      if (bStr !== dStr) return acc;
-
-      if (!b.servico) return acc;
-
-      let val = 0;
-      if (Array.isArray(b.servico)) {
-        b.servico.forEach(s=>{
-          const serv = servicos.find(x=>x.nome===s);
-          if (serv) val+=serv.preco;
-        });
-      } else {
-        const serv = servicos.find(x=>x.nome===b.servico);
-        if (serv) val+=serv.preco;
-      }
-
-      return acc + val;
-    },0);
-  });
-
-  new Chart(document.getElementById('chart-faturamento'), {
-    type:'line',
-    data:{
-      labels: datasUltimos30.map(d=>d.split('-').reverse().join('/')),
-      datasets:[{
-        label:'Faturamento (R$)',
-        data:faturamento,
-        borderColor:'#f59e0b',
-        backgroundColor:'rgba(245,158,11,0.2)',
-        fill:true,
-        tension:0.3
-      }]
-    },
-    options:{
-      responsive:true,
-      plugins:{legend:{display:false}},
-      scales:{y:{beginAtZero:true}}
-    }
-  });
-
-  // ===============================
-  // 4) ❌ CANCELAMENTOS POR MÊS
-  // ===============================
-  const meses = [
-    "Jan","Fev","Mar","Abr","Mai","Jun",
-    "Jul","Ago","Set","Out","Nov","Dez"
-  ];
-
-  const cancelamentosMes = Array(12).fill(0);
-
-  allBookings.forEach(b => {
-    if (b.status === "cancelado") {
-      const d = toDate(b.data);
-      if (d) cancelamentosMes[d.getMonth()]++;
-    }
-  });
-
-  new Chart(document.getElementById("chart-cancelamentos"), {
-    type: "bar",
-    data: {
-      labels: meses,
-      datasets: [{
-        label: "Cancelamentos",
-        data: cancelamentosMes,
-        backgroundColor: "#ef4444"
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true } }
-    }
-  });
-
-  // ===============================
-  // 5) 👑 CLIENTES VIP (PLACEHOLDER)
-  // ===============================
-  // → Quando você implementar assinaturas VIP,
-  //   só preencher "vipLabels" e "vipValues".
-
-  const vipLabels = ["Dia","Semana","Mês"]; // TEMPORÁRIO
-  const vipValues = [3, 12, 25];            // TEMPORÁRIO
-
-  new Chart(document.getElementById("chart-clientes-vip"), {
-    type: "doughnut",
-    data: {
-      labels: vipLabels,
-      datasets: [{
-        data: vipValues,
-        backgroundColor: ["#10b981","#3b82f6","#f59e0b"]
-      }]
-    },
-    options: { responsive: true }
-  });
-}
-
-// 📋 RELATÓRIO DE CLIENTES (CORRIGIDO)
-function gerarRelatorioClientes() {
-  const clientesMap = {};
-
-  allBookings.forEach(b => {
-    if (!b.email) return;
-
-    if (!clientesMap[b.email]) {
-      clientesMap[b.email] = {
-        nome: b.nome || "-",
-        email: b.email,
-        telefone: b.telefone || "-",
-        totalGasto: 0,
-        visitas: [],
-        frequenciaMes: {},
-        frequenciaAno: {},
-        servicos: {}
-      };
-    }
-
-    const cliente = clientesMap[b.email];
-
-    const data = toDate(b.data);
-    if (!data) return;
-    cliente.visitas.push(data);
-
-    const mesAno = `${data.getMonth()+1}/${data.getFullYear()}`;
-    const ano = data.getFullYear();
-    cliente.frequenciaMes[mesAno] = (cliente.frequenciaMes[mesAno] || 0) + 1;
-    cliente.frequenciaAno[ano] = (cliente.frequenciaAno[ano] || 0) + 1;
-
-    if (b.servico) {
-      if (Array.isArray(b.servico)) {
-        b.servico.forEach(s => {
-          const serv = servicos.find(x => x.nome === s);
-          if (serv) {
-            cliente.totalGasto += serv.preco;
-            cliente.servicos[s] = (cliente.servicos[s] || 0) + 1;
-          }
-        });
-      } else {
-        const serv = servicos.find(x => x.nome === b.servico);
-        if (serv) {
-          cliente.totalGasto += serv.preco;
-          cliente.servicos[b.servico] = (cliente.servicos[b.servico] || 0) + 1;
-        }
-      }
-    }
-  });
-
-  const clientesOrdenados = Object.values(clientesMap)
-    .sort((a,b) => b.visitas.length - a.visitas.length);
-
-  // === ATUALIZA TABELA DE CLIENTES ===
-  const tabela = document.getElementById("clients-table");
-  tabela.innerHTML = clientesOrdenados.map(c => {
-    const servicoPreferido = Object.entries(c.servicos).sort((a,b)=>b[1]-a[1])[0]?.[0] || "-";
-    const ultimaVisita = c.visitas.length ? c.visitas.reduce((a,b)=>a>b?a:b) : "-";
-
-    return `
-      <tr class="hover:bg-zinc-800/50 transition">
-        <td class="px-4 py-2">${c.nome}</td>
-        <td class="px-4 py-2">${ultimaVisita instanceof Date ? ultimaVisita.toLocaleDateString("pt-BR") : "-"}</td>
-        <td class="px-4 py-2">${Object.values(c.frequenciaMes)[0] || 0}</td>
-        <td class="px-4 py-2">${Object.values(c.frequenciaAno)[0] || 0}</td>
-        <td class="px-4 py-2">R$ ${c.totalGasto.toFixed(2)}</td>
-        <td class="px-4 py-2">${servicoPreferido}</td>
-        <td class="px-4 py-2">
-          <a href="https://wa.me/${c.telefone.replace(/\D/g,'')}"
-             target="_blank"
-             class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 text-sm">
-             WhatsApp
-          </a>
-        </td>
-      </tr>
-    `;
-  }).join("");
-
-  // === ATUALIZA RANKING ===
-  const ranking = document.getElementById("ranking-clientes");
-  ranking.innerHTML = clientesOrdenados.slice(0,10).map(c => `
-    <li>${c.nome} — ${c.visitas.length} visitas</li>
-  `).join("");
-}
-// =====================================
-// 📌 RELATÓRIO DE SERVIÇOS
-// =====================================
-function gerarRelatorioServicos() {
-  const servicosMap = {}; // { NomeServico: { qtd, total, duracaoTotal } }
-
-  const agora = new Date();
-  const mesAtual = agora.getMonth();
-  const mesPassado = mesAtual === 0 ? 11 : mesAtual - 1;
-
-  // Preparar dados mensais
-  const mensalAtual = {};
-  const mensalPassado = {};
-
-  allBookings.forEach(b => {
-    if (!b.servico) return;
-
-    const data = toDate(b.data);
-    if (!data) return;
-
-    const servico = b.servico;
-    const dados = servicos.find(s => s.nome === servico);
-    if (!dados) return;
-
-    // Inicializar
-    if (!servicosMap[servico]) {
-      servicosMap[servico] = {
-        qtd: 0,
-        total: 0,
-        duracaoTotal: 0
-      };
-    }
-
-    servicosMap[servico].qtd++;
-    servicosMap[servico].total += dados.preco;
-    servicosMap[servico].duracaoTotal += parseInt(dados.duracao || 0);
-
-    // Comparativo mensal
-    if (data.getMonth() === mesAtual) {
-      mensalAtual[servico] = (mensalAtual[servico] || 0) + 1;
-    }
-    if (data.getMonth() === mesPassado) {
-      mensalPassado[servico] = (mensalPassado[servico] || 0) + 1;
-    }
-  });
-
-
-  // ===============================
-  // 🧮 KPIs
-  // ===============================
-  const serviçosOrdenadosLucro = Object.entries(servicosMap).sort((a, b) => b[1].total - a[1].total);
-  const serviçosOrdenadosBusca = Object.entries(servicosMap).sort((a, b) => b[1].qtd - a[1].qtd);
-
-  document.getElementById("kpi-lucrativo").innerText =
-    serviçosOrdenadosLucro[0]?.[0] || "—";
-
-  document.getElementById("kpi-buscado").innerText =
-    serviçosOrdenadosBusca[0]?.[0] || "—";
-
-  const totalServicos = Object.values(servicosMap).reduce((acc, s) => acc + s.qtd, 0);
-  const totalFaturamento = Object.values(servicosMap).reduce((acc, s) => acc + s.total, 0);
-
-  document.getElementById("kpi-ticket-medio-servico").innerText =
-    totalServicos ? `R$ ${(totalFaturamento / totalServicos).toFixed(2)}` : "R$ 0";
-
-  const tempoTotalMes = Object.values(servicosMap).reduce((acc, s) => acc + s.duracaoTotal, 0);
-  document.getElementById("kpi-tempo-total").innerText = `${tempoTotalMes} min`;
-
-
-  // ===============================
-  // 📊 COMPARATIVO MENSAL (GRÁFICO)
-  // ===============================
-  const servicosNomes = servicos.map(s => s.nome);
-
-  const datasetAtual = servicosNomes.map(n => mensalAtual[n] || 0);
-  const datasetPassado = servicosNomes.map(n => mensalPassado[n] || 0);
-
-  if (window.chartServicosMensal) window.chartServicosMensal.destroy();
-
-  window.chartServicosMensal = new Chart(document.getElementById("chart-servicos-mensal"), {
-    type: "bar",
-    data: {
-      labels: servicosNomes,
-      datasets: [
-        {
-          label: "Mês Atual",
-          data: datasetAtual,
-          backgroundColor: "#f59e0b",
-        },
-        {
-          label: "Mês Passado",
-          data: datasetPassado,
-          backgroundColor: "#3b82f6",
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      scales: { y: { beginAtZero: true } }
-    }
-  });
-}
-
-// Atualiza gráficos sempre que os agendamentos mudarem
-function updateAll() {
-  updateStats();
-  renderBookings();
-  atualizarGraficos();
-  gerarRelatorioClientes();
-  gerarRelatorioServicos();
-  
-}
-
-// Substituir chamadas antigas
-loadBookings(); // onSnapshot já chama updateStats/renderBookings
-onSnapshot(query(collection(db, "agendamentos")), ()=>updateAll());
-
-    // ============================
-// 📅 Flatpickr nos filtros de data
-// ============================
-flatpickr("#start-range", {
-  dateFormat: "Y-m-d",
-  locale: "default",
-  monthSelectorType: "dropdown",
-  disableMobile: true,
-  defaultDate: null,
-  onReady: function(selectedDates, dateStr, instance) {
-    instance.clear(); // deixa o input vazio
-  }
-});
-
-flatpickr("#end-range", {
-  dateFormat: "Y-m-d",
-  locale: "default",
-  monthSelectorType: "dropdown",
-  disableMobile: true,
-  defaultDate: null,
-  onReady: function(selectedDates, dateStr, instance) {
-    instance.clear(); // deixa o input vazio
-  }
-});
-
-/* ==============================
-   CONTROLE DO MENU "AÇÕES ▾"
-   ============================== */
-function toggleMoreMenu(event, id) {
-  event.stopPropagation();
-  const menu = document.getElementById(`more-menu-${id}`);
-  if (!menu) return;
-
-  const isVisible = menu.classList.contains("show");
-
-  document.querySelectorAll(".more-dropdown-menu").forEach(m => {
-    m.classList.remove("show");
-  });
-
-  if (!isVisible) menu.classList.add("show");
-
-  window.agendamentoAtual = id;
-}
-
-document.addEventListener("click", () => {
-  document.querySelectorAll(".more-dropdown-menu").forEach(menu => {
-    menu.classList.remove("show");
-  });
-});
-
-
-/* ==============================
-   CONTROLE DOS MODAIS
-   ============================== */
-function openModal(modalId) {
-  document.getElementById("modal-overlay").classList.remove("hidden");
-  document.querySelectorAll(".modal-card").forEach(m => m.classList.add("hidden"));
-  document.getElementById(modalId).classList.remove("hidden");
-}
-
-function closeModal() {
-  document.getElementById("modal-overlay").classList.add("hidden");
-  document.querySelectorAll(".modal-card").forEach(m => m.classList.add("hidden"));
-}
-
-document.getElementById("modal-overlay").addEventListener("click", (e) => {
-  if (e.target.id === "modal-overlay") closeModal();
-});
-
-
-/* ==============================
-   FUNÇÕES FIRESTORE
-   ============================== */
-async function carregarServicos(id) {
-  const servicosList = document.getElementById("servicos-list");
-  servicosList.innerHTML = "";
-  const docRef = doc(db, "agendamentos", id);
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) return;
-
-  const agendamento = docSnap.data();
-  let total = 0;
-  agendamento.servicos?.forEach(s => {
-  const div = document.createElement("div");
-  div.className = "flex justify-between items-center";
-
-  div.innerHTML = `
-    <label class="flex items-center gap-2">
-      <input type="checkbox" value="${s.nome}" checked />
-      <span>${s.nome}</span>
-    </label>
-    <span>R$ ${s.preco.toFixed(2)}</span>
-  `;
-
-  servicosList.appendChild(div);
-  total += s.preco;
-});
-
-
-  document.getElementById("servicos-total").textContent = `R$ ${total.toFixed(2)}`;
-}
-// ---------- AJUSTE TOTAL DOS SERVIÇOS ----------
-function updateServicosTotal() {
-  const checkboxes = document.querySelectorAll("#servicos-list input[type=checkbox]");
-  let total = 0;
-  checkboxes.forEach(cb => {
-    if (cb.checked) {
-      const s = servicos.find(x => x.nome === cb.value);
-      if (s) total += s.preco;
-    }
-  });
-  document.getElementById("servicos-total").textContent = `R$ ${total.toFixed(2)}`;
-}
-
-// Atualiza total sempre que marca/desmarca serviço
-document.getElementById("servicos-list").addEventListener("change", updateServicosTotal);
-
-async function carregarObservacoes(id) {
-  const docRef = doc(db, "agendamentos", id);
-  const docSnap = await getDoc(docRef);
-  document.getElementById("observacoes-text").value = docSnap.exists() ? docSnap.data().observacoes || "" : "";
-}
-
-async function carregarHistorico(email) {
-  const historicoDiv = document.getElementById("historico-content");
-  historicoDiv.innerHTML = "";
-  const q = query(collection(db, "agendamentos"), where("email", "==", email));
-  const querySnapshot = await getDocs(q);
-
-  if (querySnapshot.empty) {
-    historicoDiv.textContent = "Nenhum histórico encontrado.";
-    return;
-  }
-
-  querySnapshot.forEach(docSnap => {
-    const a = docSnap.data();
-    const div = document.createElement("div");
-    div.className = "flex justify-between bg-zinc-800 p-2 rounded";
-    div.innerHTML = `<span>${a.data} ${a.hora}</span><span>${a.servicos?.map(s => s.nome).join(", ")}</span>`;
-    historicoDiv.appendChild(div);
-  });
-}
-
-/* ==============================
-   FUNÇÕES DE ABERTURA ESPECÍFICA
-   ============================== */
-function abrirModalRemarcar(id) {
-  window.agendamentoAtual = id;
-  openModal("modal-remarcar");
-}
-
-function abrirModalServicos(id) {
-  window.agendamentoAtual = id;
-  carregarServicos(id);
-  openModal("modal-servicos");
-}
-
-function abrirModalObservacoes(id) {
-  window.agendamentoAtual = id;
-  carregarObservacoes(id);
-  openModal("modal-observacoes");
-}
-
-function abrirModalHistorico(email) {
-  carregarHistorico(email);
-  openModal("modal-historico");
-}
-
-/* ==============================
-   FUNÇÕES DE SALVAMENTO (PLACEHOLDER)
-   ============================== */
-async function salvarRemarcacao() {
-  const id = window.agendamentoAtual;
-  if (!id) return;
-
-  const novaData = document.getElementById("remarcar-data").value;
-  const novaHora = document.getElementById("remarcar-hora").value;
-
-  if (!novaData || !novaHora) {
-    alert("Selecione data e hora.");
-    return;
-  }
-
-  const docRef = doc(db, "agendamentos", id);
-
-  try {
-    await updateDoc(docRef, {
-      data: novaData,
-      hora: novaHora,
-      atualizadoEm: serverTimestamp()
-    });
-
-    closeModal();
-    updateAll(); // Atualiza gráficos, tabela e relatórios
-    alert("Agendamento remarcado com sucesso!");
-  } catch (error) {
-    console.error("Erro ao remarcar:", error);
-    alert("Não foi possível remarcar o agendamento.");
-  }
-}
-
-async function salvarServicos() {
-  const id = window.agendamentoAtual;
-  if (!id) return;
-
-  const servicosList = Array.from(document.querySelectorAll("#servicos-list div span:first-child"));
-  const servicosSelecionados = servicosList.map((span) => {
-    const nome = span.textContent;
-    const serv = servicos.find(s => s.nome === nome);
-    return serv ? { nome: serv.nome, preco: serv.preco } : null;
-  }).filter(Boolean);
-
-  if (!servicosSelecionados.length) {
-    alert("Selecione pelo menos um serviço.");
-    return;
-  }
-
-  const docRef = doc(db, "agendamentos", id);
-
-  try {
-    await updateDoc(docRef, {
-      servicos: servicosSelecionados,
-      atualizadoEm: serverTimestamp()
-    });
-
-    closeModal();
-    updateAll();
-    alert("Serviços atualizados com sucesso!");
-  } catch (error) {
-    console.error("Erro ao atualizar serviços:", error);
-    alert("Não foi possível atualizar os serviços.");
-  }
-}
-
-async function salvarObservacoes() {
-  const id = window.agendamentoAtual;
-  if (!id) return;
-
-  const observacoes = document.getElementById("observacoes-text").value || "";
-
-  const docRef = doc(db, "agendamentos", id);
-
-  try {
-    await updateDoc(docRef, {
-      observacoes,
-      atualizadoEm: serverTimestamp()
-    });
-
-    closeModal();
-    updateAll();
-    alert("Observações salvas com sucesso!");
-  } catch (error) {
-    console.error("Erro ao salvar observações:", error);
-    alert("Não foi possível salvar as observações.");
-  }
-}
-
-/* ==============================
-   EXPÕE FUNÇÕES PARA HTML
-   ============================== */
-window.toggleMoreMenu = toggleMoreMenu;
-window.abrirModalRemarcar = abrirModalRemarcar;
-window.abrirModalServicos = abrirModalServicos;
-window.abrirModalObservacoes = abrirModalObservacoes;
-window.abrirModalHistorico = abrirModalHistorico;
-window.openModal = openModal;
-window.closeModal = closeModal;
-window.salvarRemarcacao = salvarRemarcacao;
-window.salvarServicos = salvarServicos;
-window.salvarObservacoes = salvarObservacoes;
-
-
-  </script>
-  <!-- ===== MODAIS AVANÇADOS (cole antes de </body>) ===== -->
+ <!-- MODAIS -->
 <div id="modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40 flex items-center justify-center">
 
   <!-- REMARCAR -->
   <div id="modal-remarcar" class="modal-card bg-zinc-900 p-6 rounded-xl shadow-xl w-full max-w-md hidden">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-semibold">Remarcar Agendamento</h3>
-      <button class="modal-close text-zinc-400" onclick="closeModal()">✕</button>
+      <button class="modal-close text-zinc-400" data-action="close-modal">✕</button>
     </div>
     <div class="space-y-3">
       <input id="remarcar-data" type="date" class="w-full px-3 py-2 rounded bg-zinc-800" />
       <input id="remarcar-hora" type="time" class="w-full px-3 py-2 rounded bg-zinc-800" />
       <div class="flex gap-2 justify-end">
-        <button class="px-4 py-2 rounded bg-zinc-700" onclick="closeModal()">Cancelar</button>
-        <button class="px-4 py-2 rounded bg-amber-500 text-black" onclick="salvarRemarcacao()">Salvar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ALTERAR SERVIÇOS -->
-  <div id="modal-servicos" class="modal-card bg-zinc-900 p-6 rounded-xl shadow-xl w-full max-w-md hidden">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-semibold">Alterar Serviços</h3>
-      <button class="modal-close text-zinc-400" onclick="closeModal()">✕</button>
-    </div>
-    <div id="servicos-list" class="space-y-2 max-h-60 overflow-auto mb-4"></div>
-    <div class="flex items-center justify-between">
-      <div class="text-zinc-400">Total: <span id="servicos-total">R$ 0,00</span></div>
-      <div class="flex gap-2">
-        <button class="px-4 py-2 rounded bg-zinc-700" onclick="closeModal()">Cancelar</button>
-        <button class="px-4 py-2 rounded bg-amber-500 text-black" onclick="salvarServicos()">Salvar</button>
+        <button class="px-4 py-2 rounded bg-zinc-700" data-action="close-modal">Cancelar</button>
+        <button class="px-4 py-2 rounded bg-amber-500 text-black" data-action="save-remarcacao">Salvar</button>
       </div>
     </div>
   </div>
@@ -1428,12 +313,13 @@ window.salvarObservacoes = salvarObservacoes;
   <div id="modal-observacoes" class="modal-card bg-zinc-900 p-6 rounded-xl shadow-xl w-full max-w-md hidden">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-semibold">Observações Internas</h3>
-      <button class="modal-close text-zinc-400" onclick="closeModal()">✕</button>
+      <button class="modal-close text-zinc-400" data-action="close-modal">✕</button>
     </div>
     <textarea id="observacoes-text" rows="6" class="w-full bg-zinc-800 px-3 py-2 rounded mb-4" placeholder="Notas internas visíveis apenas ao time..."></textarea>
+    <input type="hidden" id="observacoes-agendamento-id" value="">
     <div class="flex justify-end gap-2">
-      <button class="px-4 py-2 rounded bg-zinc-700" onclick="closeModal()">Cancelar</button>
-      <button class="px-4 py-2 rounded bg-amber-500 text-black" onclick="salvarObservacoes()">Salvar</button>
+      <button class="px-4 py-2 rounded bg-zinc-700" data-action="close-modal">Cancelar</button>
+      <button class="px-4 py-2 rounded bg-amber-500 text-black" data-action="save-observacoes">Salvar</button>
     </div>
   </div>
 
@@ -1441,16 +327,18 @@ window.salvarObservacoes = salvarObservacoes;
   <div id="modal-historico" class="modal-card bg-zinc-900 p-6 rounded-xl shadow-xl w-full max-w-md hidden">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-semibold">Histórico do Cliente</h3>
-      <button class="modal-close text-zinc-400" onclick="closeModal()">✕</button>
+      <button class="modal-close text-zinc-400" data-action="close-modal">✕</button>
     </div>
     <div id="historico-content" class="max-h-72 overflow-auto space-y-3 text-sm text-zinc-200"></div>
     <div class="flex justify-end mt-3">
-      <button class="px-4 py-2 rounded bg-zinc-700" onclick="closeModal()">Fechar</button>
+      <button class="px-4 py-2 rounded bg-zinc-700" data-action="close-modal">Fechar</button>
     </div>
   </div>
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="module" src="firebase-config.js"></script>
+<script type="module" src="admin.js"></script>
 </body>
 </html>
-
