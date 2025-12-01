@@ -12,9 +12,8 @@ import {
 
 // Globals
 const tabelaAgendamentos = document.getElementById("bookings-table")
-let todosAgendamentos = []
-let agendamentoAtual = null
-let mapaServicos = {} // nome -> { preco, duracao, descricao, id }
+let todosAgendamentos = []          // dados brutos (sem filtros)
+let mapaServicos = {}               // nome -> { preco, duracao, descricao, id }
 
 // Chart instances (para destruir antes de recriar)
 let chartAgendamentosDia = null
@@ -24,9 +23,20 @@ let chartClientesVIP = null
 let chartFaturamento = null
 let chartServicosMensal = null
 
-// Inicialização: carrega serviços -> abre listener de agendamentos
+// Estado de filtros / ordenação / busca
+const filtrosAtuais = {
+  presetData: "all",    // values: all, today, tomorrow, week, month, null(if custom range used)
+  rangeInicio: null,    // "YYYY-MM-DD" or null
+  rangeFim: null,       // "YYYY-MM-DD" or null
+  ordenacao: "newest",  // newest | oldest
+  busca: ""             // texto de busca
+}
+
+// Inicialização: carrega serviços -> abre listener de agendamentos -> configura UI
 async function iniciarSistema() {
   await carregarMapaServicos().catch(err => console.warn("Falha ao carregar serviços inicial:", err))
+  configurarFlatpickr()
+  configurarEventosUI()
   carregarAgendamentos()
 }
 iniciarSistema()
@@ -54,7 +64,7 @@ async function carregarMapaServicos() {
   }
 }
 
-// Carrega agendamentos em tempo real e atualiza UI/graficos
+// Carrega agendamentos em tempo real e atualiza UI/graficos e relatórios
 function carregarAgendamentos() {
   const q = query(collection(db, "agendamentos"), orderBy("data"))
   onSnapshot(q, async (snapshot) => {
@@ -63,45 +73,159 @@ function carregarAgendamentos() {
       todosAgendamentos.push({ id: docSnap.id, ...docSnap.data() })
     })
 
-    // renderizar tabela e calcular métricas/graficos
-    renderizarAgendamentos()
     // garante que mapaServicos existirá para calcular faturamento
     if (!mapaServicos || Object.keys(mapaServicos).length === 0) {
       await carregarMapaServicos().catch(e => console.warn("Erro fallback mapServicos:", e))
     }
-    atualizarEstatisticasCompletas()
-    atualizarGraficos()
+
+    // Atualiza tudo com base nos filtros atuais
+    atualizarTudo()
   }, (err) => {
     console.error("Erro no snapshot agendamentos:", err)
   })
 }
 
-/* BLOCO 3 - ESTATÍSTICAS */
+/* BLOCO 3 - FILTROS / BUSCA / ORDENAÇÃO */
 
-// Atualiza estatísticas básicas (existentes no HTML)
-function atualizarEstatisticasBasicas() {
-  document.getElementById("stat-total").innerText = todosAgendamentos.length
-  document.getElementById("stat-confirmed").innerText =
-    todosAgendamentos.filter(a => (a.status || "").toLowerCase() === "confirmado").length
-
-  const hoje = new Date().toISOString().slice(0, 10)
-  document.getElementById("stat-today").innerText =
-    todosAgendamentos.filter(a => a.data === hoje).length
+// Converte Date para YYYY-MM-DD
+function toYMD(date) {
+  return date.toISOString().slice(0, 10)
 }
 
-// Atualiza estatísticas master (faturamento, ticket, clientes unicos, top service, top hour)
-function atualizarEstatisticasMaster() {
-  if (!todosAgendamentos || todosAgendamentos.length === 0) {
-    document.getElementById("stat-revenue").innerText = formatarBRL(0)
-    document.getElementById("stat-ticket").innerText = formatarBRL(0)
-    document.getElementById("stat-clients").innerText = "0"
-    document.getElementById("stat-top-service").innerText = "—"
-    document.getElementById("stat-top-hour").innerText = "—"
+// Retorna array filtrado e ordenado conforme filtrosAtuais
+function aplicarFiltros() {
+  const todos = Array.isArray(todosAgendamentos) ? todosAgendamentos.slice() : []
+
+  // 1) filtro de data (preset ou range)
+  let inicioFiltro = null
+  let fimFiltro = null
+  const hoje = new Date()
+
+  if (filtrosAtuais.presetData && filtrosAtuais.presetData !== "null") {
+    switch (filtrosAtuais.presetData) {
+      case "all":
+        inicioFiltro = null
+        fimFiltro = null
+        break
+      case "today":
+        inicioFiltro = toYMD(hoje)
+        fimFiltro = inicioFiltro
+        break
+      case "tomorrow": {
+        const t = new Date(hoje); t.setDate(t.getDate() + 1)
+        inicioFiltro = toYMD(t); fimFiltro = inicioFiltro
+        break
+      }
+      case "week": {
+        const inicio = new Date(hoje); // começo hoje
+        const fim = new Date(hoje); fim.setDate(fim.getDate() + 6) // próximos 7 dias (hoje..hoje+6)
+        inicioFiltro = toYMD(inicio); fimFiltro = toYMD(fim)
+        break
+      }
+      case "month": {
+        const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
+        const fim = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0)
+        inicioFiltro = toYMD(inicio); fimFiltro = toYMD(fim)
+        break
+      }
+      default:
+        inicioFiltro = null; fimFiltro = null
+    }
+  }
+
+  // Se houver range custom definido, ele tem prioridade
+  if (filtrosAtuais.rangeInicio && filtrosAtuais.rangeFim) {
+    inicioFiltro = filtrosAtuais.rangeInicio
+    fimFiltro = filtrosAtuais.rangeFim
+  }
+
+  let filtrados = todos.filter(a => {
+    // data filter
+    if (inicioFiltro && fimFiltro) {
+      if (!a.data) return false
+      if (a.data < inicioFiltro || a.data > fimFiltro) return false
+    }
+
+    // busca (em vários campos)
+    const q = (filtrosAtuais.busca || "").trim().toLowerCase()
+    if (!q) return true
+
+    // campos pesquisados: nome, data, servico, barbeiro, telefone, horario, status
+    const campos = [
+      (a.nome || ""),
+      (a.data || ""),
+      (a.servico || ""),
+      (a.barbeiro || ""),
+      (a.telefone || ""),
+      (a.horario || ""),
+      (a.status || "")
+    ].map(x => String(x).toLowerCase())
+
+    // busca por tokens (se usuário escreveu várias palavras)
+    const tokens = q.split(/\s+/).filter(Boolean)
+
+    return tokens.every(token => campos.some(c => c.includes(token)))
+  })
+
+  // ordenação
+  filtrados.sort((a, b) => {
+    // prioridade: data, horario
+    const da = a.data || ""
+    const dbb = b.data || ""
+    if (da !== dbb) {
+      if (filtrosAtuais.ordenacao === "newest") return dbb.localeCompare(da) // desc
+      return da.localeCompare(dbb) // asc
+    }
+    const ha = a.horario || ""
+    const hb = b.horario || ""
+    if (ha !== hb) {
+      if (filtrosAtuais.ordenacao === "newest") return hb.localeCompare(ha)
+      return ha.localeCompare(hb)
+    }
+    return 0
+  })
+
+  return filtrados
+}
+
+/* BLOCO 4 - ESTATÍSTICAS */
+
+// Atualiza estatísticas básicas com base nos agendamentos filtrados
+function atualizarEstatisticasBasicas(agendamentosFiltrados) {
+  const total = agendamentosFiltrados.length
+  const hoje = new Date().toISOString().slice(0, 10)
+  const countHoje = agendamentosFiltrados.filter(ag => ag.data === hoje).length
+  const countCancelados = agendamentosFiltrados.filter(ag => (ag.status || "").toLowerCase() === "cancelado").length
+  const countReagendados = agendamentosFiltrados.filter(ag => (ag.status || "").toLowerCase() === "reagendado").length
+
+  const elTotal = document.getElementById("stat-total")
+  const elToday = document.getElementById("stat-today")
+  const elCancel = document.getElementById("stat-cancelados")
+  const elReag = document.getElementById("stat-reagendados")
+  if (elTotal) elTotal.innerText = String(total)
+  if (elToday) elToday.innerText = String(countHoje)
+  if (elCancel) elCancel.innerText = String(countCancelados)
+  if (elReag) elReag.innerText = String(countReagendados)
+}
+
+// Atualiza estatísticas master com base nos agendamentos filtrados
+function atualizarEstatisticasMaster(agendamentosFiltrados) {
+  if (!agendamentosFiltrados || agendamentosFiltrados.length === 0) {
+    const elRevenue = document.getElementById("stat-revenue")
+    const elTicket = document.getElementById("stat-ticket")
+    const elClients = document.getElementById("stat-clients")
+    const elTopService = document.getElementById("stat-top-service")
+    const elTopHour = document.getElementById("stat-top-hour")
+    if (elRevenue) elRevenue.innerText = formatarBRL(0)
+    if (elTicket) elTicket.innerText = formatarBRL(0)
+    if (elClients) elClients.innerText = "0"
+    if (elTopService) elTopService.innerText = "—"
+    if (elTopHour) elTopHour.innerText = "—"
     return
   }
 
-  const statusValidos = ["concluido", "confirmado"] // ajuste se quiser incluir outros
-  const agendamentosValidos = todosAgendamentos.filter(a => statusValidos.includes((a.status || "").toLowerCase()))
+  const statusValidos = ["concluido", "confirmado"]
+  const agendamentosValidos = agendamentosFiltrados.filter(a => statusValidos.includes((a.status || "").toLowerCase()))
 
   // faturamento
   let faturamento = 0
@@ -115,15 +239,15 @@ function atualizarEstatisticasMaster() {
 
   // clientes únicos por telefone
   const telefones = new Set()
-  todosAgendamentos.forEach(a => {
+  agendamentosFiltrados.forEach(a => {
     const tel = (a.telefone || "").replace(/\D/g, "")
     if (tel) telefones.add(tel)
   })
   const totalClientes = telefones.size
 
-  // serviço mais agendado
+  // serviço mais agendado (no conjunto filtrado)
   const contadorServicos = {}
-  todosAgendamentos.forEach(a => {
+  agendamentosFiltrados.forEach(a => {
     const nome = a.servico || "—"
     contadorServicos[nome] = (contadorServicos[nome] || 0) + 1
   })
@@ -131,23 +255,28 @@ function atualizarEstatisticasMaster() {
 
   // horário mais movimentado
   const contadorHorarios = {}
-  todosAgendamentos.forEach(a => {
+  agendamentosFiltrados.forEach(a => {
     const hora = a.horario || "—"
     contadorHorarios[hora] = (contadorHorarios[hora] || 0) + 1
   })
   const horarioTop = Object.entries(contadorHorarios).sort((a,b)=>b[1]-a[1])[0]?.[0] || "—"
 
   // atualizar DOM
-  document.getElementById("stat-revenue").innerText = formatarBRL(faturamento)
-  document.getElementById("stat-ticket").innerText = formatarBRL(ticketMedio)
-  document.getElementById("stat-clients").innerText = String(totalClientes)
-  document.getElementById("stat-top-service").innerText = servicoTop
-  document.getElementById("stat-top-hour").innerText = horarioTop
+  const elRevenue = document.getElementById("stat-revenue")
+  const elTicket = document.getElementById("stat-ticket")
+  const elClients = document.getElementById("stat-clients")
+  const elTopService = document.getElementById("stat-top-service")
+  const elTopHour = document.getElementById("stat-top-hour")
+  if (elRevenue) elRevenue.innerText = formatarBRL(faturamento)
+  if (elTicket) elTicket.innerText = formatarBRL(ticketMedio)
+  if (elClients) elClients.innerText = String(totalClientes)
+  if (elTopService) elTopService.innerText = servicoTop
+  if (elTopHour) elTopHour.innerText = horarioTop
 }
 
-function atualizarEstatisticasCompletas() {
-  atualizarEstatisticasBasicas()
-  atualizarEstatisticasMaster()
+function atualizarEstatisticasCompletas(agendamentosFiltrados) {
+  atualizarEstatisticasBasicas(agendamentosFiltrados)
+  atualizarEstatisticasMaster(agendamentosFiltrados)
 }
 
 // helper formatador
@@ -156,18 +285,18 @@ function formatarBRL(valor) {
   return numero.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 })
 }
 
-/* BLOCO 4 - TABELA E MODAIS */
+/* BLOCO 5 - TABELA (sem modais nem ações) */
 
-// Renderizar agendamentos na tabela
-function renderizarAgendamentos() {
+// Renderizar agendamentos na tabela — recebe array filtrado para renderizar
+function renderizarAgendamentos(agendamentosFiltrados) {
   if (!tabelaAgendamentos) return
 
-  if (todosAgendamentos.length === 0) {
-    tabelaAgendamentos.innerHTML = `<tr><td colspan="7" class="text-center p-6">Nenhum agendamento encontrado.</td></tr>`
+  if (!agendamentosFiltrados || agendamentosFiltrados.length === 0) {
+    tabelaAgendamentos.innerHTML = `<tr><td colspan="6" class="text-center p-6">Nenhum agendamento encontrado.</td></tr>`
     return
   }
 
-  tabelaAgendamentos.innerHTML = todosAgendamentos.map(ag => `
+  tabelaAgendamentos.innerHTML = agendamentosFiltrados.map(ag => `
     <tr class="hover:bg-zinc-800 transition">
       <td class="px-6 py-4">${escapeHtml(ag.nome)}</td>
       <td class="px-6 py-4">${escapeHtml(ag.servico || "-")}</td>
@@ -175,11 +304,6 @@ function renderizarAgendamentos() {
       <td class="px-6 py-4">${escapeHtml(ag.data || "-")} ${escapeHtml(ag.horario || "")}</td>
       <td class="px-6 py-4">${escapeHtml(ag.telefone || "-")}</td>
       <td class="px-6 py-4">${escapeHtml(ag.status || "-")}</td>
-      <td class="px-6 py-4 space-x-2">
-        <button class="px-2 py-1 bg-blue-600 rounded text-xs" data-action="remarcar" data-id="${ag.id}">Remarcar</button>
-        <button class="px-2 py-1 bg-teal-600 rounded text-xs" data-action="observacoes" data-id="${ag.id}">Obs</button>
-        <button class="px-2 py-1 bg-purple-600 rounded text-xs" data-action="historico" data-id="${ag.id}">Histórico</button>
-      </td>
     </tr>
   `).join("")
 }
@@ -194,59 +318,7 @@ function escapeHtml(str) {
             .replaceAll("'", "&#039;")
 }
 
-// eventos globais de clique (delegation)
-document.addEventListener("click", (event) => {
-  const botao = event.target.closest("[data-action]")
-  if (!botao) return
-  const acao = botao.dataset.action
-  const id = botao.dataset.id
-  if (!id && acao !== "close-modal") return
-
-  if (acao === "remarcar") abrirModalRemarcar(id)
-  if (acao === "observacoes") abrirModalObservacoes(id)
-  if (acao === "historico") abrirModalHistorico(id)
-  if (acao === "close-modal") closeModal()
-})
-
-// modais
-function abrirModalRemarcar(id) {
-  agendamentoAtual = id
-  exibirModal("modal-remarcar")
-}
-function abrirModalObservacoes(id) {
-  agendamentoAtual = id
-  exibirModal("modal-observacoes")
-}
-function abrirModalHistorico(id) {
-  agendamentoAtual = id
-  exibirModal("modal-historico")
-}
-function exibirModal(idModal) {
-  document.getElementById("modal-overlay").classList.remove("hidden")
-  document.getElementById(idModal).classList.remove("hidden")
-}
-window.closeModal = function () {
-  document.getElementById("modal-overlay").classList.add("hidden")
-  document.querySelectorAll(".modal-card").forEach(m => m.classList.add("hidden"))
-}
-
-// salvar remarcar
-window.salvarRemarcacao = async function() {
-  const novaData = document.getElementById("remarcar-data").value
-  const novoHorario = document.getElementById("remarcar-hora").value
-  if (!novaData || !novoHorario) {
-    alert("Selecione nova data e hora")
-    return
-  }
-  await updateDoc(doc(db, "agendamentos", agendamentoAtual), {
-    data: novaData,
-    horario: novoHorario,
-    status: "Reagendado"
-  })
-  closeModal()
-}
-
-/* BLOCO 5 - GRÁFICOS (construção e montagem) */
+/* BLOCO 6 - GRÁFICOS (construção e montagem) */
 
 // helper: opções padrão Chart.js com cores do tema escuro
 function chartOptions({showLegend=true, legendPosition="top", yCurrency=false} = {}) {
@@ -452,42 +524,42 @@ function montarChartServicosMensal(labels, datasets) {
   })
 }
 
-/* BLOCO 6 - ORQUESTRADOR DE GRAFICOS */
+/* BLOCO 7 - ORQUESTRADOR DE GRAFICOS E RELATORIOS */
 
-function atualizarGraficos() {
-  if (!todosAgendamentos) return
+function atualizarGraficos(agendamentosFiltrados) {
+  if (!agendamentosFiltrados) agendamentosFiltrados = []
 
   // Agendamentos por dia (30 dias)
-  const { labels: labelsDias, data: dataDias } = construirAgendamentosPorDia(todosAgendamentos, 30)
+  const { labels: labelsDias, data: dataDias } = construirAgendamentosPorDia(agendamentosFiltrados, 30)
   montarChartAgendamentosDia(labelsDias, dataDias)
 
   // Serviços mais populares
-  const { labels: labelsServicos, data: dataServicos } = construirServicosPopulares(todosAgendamentos, 8)
+  const { labels: labelsServicos, data: dataServicos } = construirServicosPopulares(agendamentosFiltrados, 8)
   montarChartServicosPopulares(labelsServicos, dataServicos)
 
   // Cancelamentos mes
-  const { labels: labelsCancel, data: dataCancel } = construirCancelamentosMes(todosAgendamentos)
+  const { labels: labelsCancel, data: dataCancel } = construirCancelamentosMes(agendamentosFiltrados)
   montarChartCancelamentos(labelsCancel, dataCancel)
 
   // Clientes VIP
-  const { labels: labelsVIP, series: seriesClientes } = construirClientesVIPSeries(todosAgendamentos, 6, 5)
+  const { labels: labelsVIP, series: seriesClientes } = construirClientesVIPSeries(agendamentosFiltrados, 6, 5)
   montarChartClientesVIP(labelsVIP, seriesClientes)
 
   // Faturamento ultimos 30 dias
-  const { labels: labelsFat, data: dataFat } = construirFaturamentoUltimosDias(todosAgendamentos, mapaServicos, 30)
+  const { labels: labelsFat, data: dataFat } = construirFaturamentoUltimosDias(agendamentosFiltrados, mapaServicos, 30)
   montarChartFaturamento(labelsFat, dataFat)
 
   // Servicos mensal comparativo
-  const { labels: labelsSM, datasets: datasetsSM } = construirServicosMensal(todosAgendamentos)
+  const { labels: labelsSM, datasets: datasetsSM } = construirServicosMensal(agendamentosFiltrados)
   montarChartServicosMensal(labelsSM, datasetsSM)
 }
 
-/* BLOCO 7 - RELATÓRIOS E UTILITÁRIOS */
+/* BLOCO 8 - RELATÓRIOS E UTILITÁRIOS */
 
 // Relatório de clientes (agrupa e renderiza tabela clients-table)
-function construirRelatorioClientes() {
+function construirRelatorioClientes(agendamentosFiltrados) {
   const mapa = {}
-  todosAgendamentos.forEach(a => {
+  agendamentosFiltrados.forEach(a => {
     const tel = (a.telefone||"").replace(/\D/g,"")
     const chave = tel || (a.nome||"Anônimo")
     if (!mapa[chave]) mapa[chave] = { nome: a.nome || chave, telefone: tel, visitas: 0, ultimaVisita: null, gasto: 0, servicos: {} }
@@ -500,8 +572,8 @@ function construirRelatorioClientes() {
   return mapa
 }
 
-function renderRelatorioClientes() {
-  const mapa = construirRelatorioClientes()
+function renderRelatorioClientes(agendamentosFiltrados) {
+  const mapa = construirRelatorioClientes(agendamentosFiltrados)
   const tbody = document.getElementById("clients-table")
   if (!tbody) return
   const rows = Object.values(mapa).map(c => `
@@ -524,31 +596,29 @@ function renderRelatorioClientes() {
 
 // Chamadas auxiliares públicas para botões
 window.filterClients = function() {
-  renderRelatorioClientes()
+  const filtrados = aplicarFiltros()
+  renderRelatorioClientes(filtrados)
 }
 
 // Relatório serviços (KPIs)
-function construirRelatorioServicos() {
+function construirRelatorioServicos(agendamentosFiltrados) {
   const contador = {}
   const lucro = {}
   let tempoTotalMes = 0
   const hoje = new Date()
-  const anoMes = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,"0")}`
-  todosAgendamentos.forEach(a => {
+  const mesStr = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,"0")}`
+  agendamentosFiltrados.forEach(a => {
     const nome = a.servico || "—"
     contador[nome] = (contador[nome]||0) + 1
     const preco = (mapaServicos[nome] && Number(mapaServicos[nome].preco)) || (a.preco?Number(a.preco):0)
     lucro[nome] = (lucro[nome]||0) + preco
-    // duracao se tiver no serviço
     const dur = (mapaServicos[nome] && Number(mapaServicos[nome].duracao)) || 0
-    if (a.data && a.data.slice(0,7) === anoMes) tempoTotalMes += dur
+    if (a.data && a.data.slice(0,7) === mesStr) tempoTotalMes += dur
   })
-  // kpis
   const servicoMaisLucrativo = Object.entries(lucro).sort((a,b)=>b[1]-a[1])[0]?.[0] || "—"
   const servicoMaisProcurado = Object.entries(contador).sort((a,b)=>b[1]-a[1])[0]?.[0] || "—"
-  // ticket médio por serviço (total lucro / contagem)
   const somaTickets = Object.entries(lucro).map(([k,v]) => ({k, lucro:v, count: contador[k]||0}))
-  const ticketMedioGeral = somaTickets.reduce((acc,cur)=> acc + (cur.count? cur.lucro/cur.count: 0), 0) / (somaTickets.length || 1)
+  const ticketMedioGeral = (somaTickets.length > 0) ? (somaTickets.reduce((acc,cur)=> acc + (cur.count? cur.lucro/cur.count: 0), 0) / somaTickets.length) : 0
 
   return {
     servicoMaisLucrativo,
@@ -558,17 +628,129 @@ function construirRelatorioServicos() {
   }
 }
 
-function renderRelatorioServicos() {
-  const kpis = construirRelatorioServicos()
-  document.getElementById("kpi-lucrativo").innerText = kpis.servicoMaisLucrativo || "—"
-  document.getElementById("kpi-buscado").innerText = kpis.servicoMaisProcurado || "—"
-  document.getElementById("kpi-ticket-medio-servico").innerText = formatarBRL(kpis.ticketMedioGeral || 0)
-  document.getElementById("kpi-tempo-total").innerText = `${kpis.tempoTotalMes || 0} min`
+function renderRelatorioServicos(agendamentosFiltrados) {
+  const kpis = construirRelatorioServicos(agendamentosFiltrados)
+  const elLucr = document.getElementById("kpi-lucrativo")
+  const elBusc = document.getElementById("kpi-buscado")
+  const elTick = document.getElementById("kpi-ticket-medio-servico")
+  const elTempo = document.getElementById("kpi-tempo-total")
+  if (elLucr) elLucr.innerText = kpis.servicoMaisLucrativo || "—"
+  if (elBusc) elBusc.innerText = kpis.servicoMaisProcurado || "—"
+  if (elTick) elTick.innerText = formatarBRL(kpis.ticketMedioGeral || 0)
+  if (elTempo) elTempo.innerText = `${kpis.tempoTotalMes || 0} min`
 }
 
-// Depois de cada snapshot atualize relatórios também
-// adicionar chamada nas rotinas que atualizam gráficos/métricas:
-function atualizarRelatorios() {
-  renderRelatorioClientes()
-  renderRelatorioServicos()
+// atualizar relatórios (com base nos agendamentos filtrados)
+function atualizarRelatorios(agendamentosFiltrados) {
+  renderRelatorioClientes(agendamentosFiltrados)
+  renderRelatorioServicos(agendamentosFiltrados)
 }
+
+/* BLOCO 9 - UI: Flatpickr, botões, eventos */
+
+// Configura Flatpickr nos campos start-range / end-range
+function configurarFlatpickr() {
+  const startEl = document.getElementById("start-range")
+  const endEl = document.getElementById("end-range")
+  if (!window.flatpickr) return
+  // tema dark já carregado via CSS no HTML
+  const opts = { dateFormat: "Y-m-d", allowInput: true }
+  if (startEl) window.flatpickr(startEl, opts)
+  if (endEl) window.flatpickr(endEl, opts)
+}
+
+// Configura listeners dos botões de UI
+function configurarEventosUI() {
+  // data presets
+  document.querySelectorAll("[data-date]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const preset = btn.dataset.date
+      // marcar visual (toggle de classe)
+      document.querySelectorAll(".date-btn").forEach(b => b.classList.remove("date-active"))
+      btn.classList.add("date-active")
+
+      filtrosAtuais.presetData = preset
+      // limpar range custom
+      filtrosAtuais.rangeInicio = null
+      filtrosAtuais.rangeFim = null
+      const startEl = document.getElementById("start-range")
+      const endEl = document.getElementById("end-range")
+      if (startEl) startEl.value = ""
+      if (endEl) endEl.value = ""
+
+      aplicarEAtualizarTudo()
+    })
+  })
+
+  // aplicar range custom
+  const btnApplyRange = document.querySelector("[data-action='apply-range']")
+  if (btnApplyRange) btnApplyRange.addEventListener("click", () => {
+    const startEl = document.getElementById("start-range")
+    const endEl = document.getElementById("end-range")
+    const vInicio = startEl && startEl.value ? startEl.value : null
+    const vFim = endEl && endEl.value ? endEl.value : null
+    if (!vInicio || !vFim) {
+      alert("Selecione data de início e fim para aplicar o filtro.")
+      return
+    }
+    // set custom range and clear preset
+    filtrosAtuais.presetData = null
+    filtrosAtuais.rangeInicio = vInicio
+    filtrosAtuais.rangeFim = vFim
+    // ajustar visual: remover date-active de presets
+    document.querySelectorAll(".date-btn").forEach(b => b.classList.remove("date-active"))
+    aplicarEAtualizarTudo()
+  })
+
+  // ordenacao
+  document.querySelectorAll("[data-sort]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const ordem = btn.dataset.sort
+      filtrosAtuais.ordenacao = ordem
+      // atualizar visual
+      document.querySelectorAll(".sort-btn").forEach(b => b.classList.remove("sort-active"))
+      btn.classList.add("sort-active")
+      aplicarEAtualizarTudo()
+    })
+  })
+
+  // busca (debounce)
+  const inputBusca = document.getElementById("search-input")
+  if (inputBusca) {
+    let debounceTimer = null
+    inputBusca.addEventListener("input", (e) => {
+      clearTimeout(debounceTimer)
+      debounceTimer = setTimeout(() => {
+        filtrosAtuais.busca = (e.target.value || "").trim()
+        aplicarEAtualizarTudo()
+      }, 250)
+    })
+  }
+}
+
+// Aplica filtros e atualiza tabela, estatísticas, gráficos e relatórios
+function aplicarEAtualizarTudo() {
+  const filtrados = aplicarFiltros()
+  renderizarAgendamentos(filtrados)
+  atualizarEstatisticasCompletas(filtrados)
+  atualizarGraficos(filtrados)
+  atualizarRelatorios(filtrados)
+}
+
+// Atualiza tudo (usado no snapshot)
+function atualizarTudo() {
+  // preserva qualquer preset visual (se presetData for null, nenhum preset marcado)
+  // aplica filtros e atualiza UI
+  aplicarEAtualizarTudo()
+}
+
+/* BLOCO 10 - UTILITÁRIOS FINAIS */
+
+// Expor função para atualizar manualmente (se quiser)
+window.recarregarDashboard = function() {
+  carregarMapaServicos().then(() => carregarAgendamentos())
+}
+
+// Expor filtrosAtuais para debug
+window._filtrosAtuais = filtrosAtuais
+
