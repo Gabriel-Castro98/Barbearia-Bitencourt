@@ -15,17 +15,70 @@ body { font-family: 'Poppins', sans-serif; }
 .filter-active { background:#fbbf24 !important; color:#000 !important; }
 .date-active { background:#fbbf24 !important; color:#000 !important; }
 .sort-active { background:#4f46e5 !important; }
+/* Aumenta a área do gráfico */
 .chart-box {
-  position: relative;
-  width: 100%;
-  height: 260px; /* altura ideal */
+  height: 300px;   /* Desktop */
 }
 
-@media (min-width: 768px) {
+@media (max-width: 640px) {
   .chart-box {
-    height: 320px; /* em telas maiores */
+    height: 380px;  /* Mobile: mais espaço */
   }
 }
+.chart-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.chart-wrapper {
+  min-width: 800px; /* espaço mínimo para exibir todos os labels */
+}
+.chart-box-vip {
+  height: 300px;
+}
+
+@media (max-width: 640px) {
+  .chart-box-vip {
+    height: 350px;
+  }
+}
+/* ====== Faturamento: Scroll Horizontal ====== */
+
+/* Layout do gráfico com eixo Y fixo */
+.faturamento-layout {
+  display: flex;
+  gap: 0;
+}
+
+/* Eixo Y fixo */
+.faturamento-yfix {
+  width: 60px;           /* largura do eixo Y */
+  height: 300px;
+  position: relative;
+}
+
+/* Gráfico scrollável */
+.faturamento-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.faturamento-wrapper {
+  min-width: 900px;
+  height: 300px;
+}
+
+@media (max-width: 640px) {
+  .faturamento-yfix {
+    height: 380px;
+  }
+  .faturamento-wrapper {
+    min-width: 900px;
+    height: 380px;
+  }
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </head>
@@ -108,7 +161,6 @@ body { font-family: 'Poppins', sans-serif; }
 </div>
 </div>
 
-
   <!-- AGENDAMENTOS (moved acima das métricas e gráficos) -->
   <section id="agendamentos" class="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
     <div class="p-6 border-b border-zinc-800"><h2 class="text-xl font-bold">Agendamentos em Tempo Real</h2></div>
@@ -160,16 +212,20 @@ body { font-family: 'Poppins', sans-serif; }
     <h2 class="text-xl font-bold text-zinc-100 mb-4">Gráficos de Agendamentos</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Gráfico 1: Agendamentos por dia -->
-        <div class="bg-zinc-800 p-3 rounded-xl">
-      <h3 class="text-zinc-300 font-semibold mb-2 text-sm md:text-base">
-        Agendamentos por Dia
-      </h3>
-      <div class="chart-box">
-        <canvas id="chart-agendamentos-dia"></canvas>
+      <!-- Gráfico 1: Agendamentos por dia -->
+  <div class="bg-zinc-800 p-3 rounded-xl">
+    <h3 class="text-zinc-300 font-semibold mb-2 text-sm md:text-base">
+      Agendamentos por Dia
+    </h3>
+
+    <div class="chart-scroll">
+      <div class="chart-wrapper">
+        <div class="chart-box">
+          <canvas id="chart-agendamentos-dia"></canvas>
+        </div>
       </div>
     </div>
-
+  </div>
 
     <!-- Gráfico 2: Serviços mais populares -->
     <div class="bg-zinc-800 p-3 rounded-xl">
@@ -181,36 +237,47 @@ body { font-family: 'Poppins', sans-serif; }
   </div>
 </div>
 
-
     <!-- Gráfico 3: Cancelamentos este mês -->
-    <div class="bg-zinc-800 p-3 rounded-xl">
-  <h3 class="text-zinc-300 font-semibold mb-2 text-sm md:text-base">
-    Cancelamentos Este Mês
-  </h3>
-  <div class="chart-box">
-    <canvas id="chart-cancelamentos"></canvas>
-  </div>
-</div>
+  <div class="bg-zinc-800 p-3 rounded-xl">
+    <h3 class="text-zinc-300 font-semibold mb-2 text-sm md:text-base">
+      Cancelamentos Este Mês
+    </h3>
 
+    <div class="chart-scroll">
+      <div class="chart-wrapper">
+        <div class="chart-box">
+          <canvas id="chart-cancelamentos"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
 
     <!-- Gráfico 4: Clientes VIP -->
     <div class="bg-zinc-800 p-3 rounded-xl">
   <h3 class="text-zinc-300 font-semibold mb-2 text-sm md:text-base">
     Clientes VIP
   </h3>
-  <div class="chart-box">
+  <div class="chart-box-vip">
     <canvas id="chart-clientes-vip"></canvas>
   </div>
 </div>
 
-
   <!-- Gráfico de faturamento full width -->
-  <div class="bg-zinc-800 p-4 rounded-xl">
+ <div class="faturamento-container bg-zinc-800 p-4 rounded-xl">
   <h3 class="text-zinc-300 font-semibold mb-2 text-sm md:text-base">
     Faturamento Últimos 30 Dias
   </h3>
-  <div class="chart-box">
-    <canvas id="chart-faturamento"></canvas>
+
+  <div class="faturamento-layout">
+    <div class="faturamento-yfix">
+      <canvas id="chart-faturamento-yaxis"></canvas>
+    </div>
+
+    <div class="faturamento-scroll">
+      <div class="faturamento-wrapper">
+        <canvas id="chart-faturamento"></canvas>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -308,5 +375,6 @@ body { font-family: 'Poppins', sans-serif; }
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script type="module" src="firebase-config.js"></script>
 <script type="module" src="admin.js"></script>
+
 </body>
-</html>
+</html> 

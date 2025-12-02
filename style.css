@@ -204,3 +204,34 @@
   box-shadow: 0 4px 6px rgba(0,0,0,0.5);
 
 }
+/* 🌙 Modo ESCURO (se o usuário preferir dark mode) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Seus estilos ESCUROS atuais aqui */
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: #0a0a0a;
+    color: #e4e4e7;
+  }
+}
+
+/* ☀️ Modo CLARO (se o usuário preferir light mode) */
+@media (prefers-color-scheme: light) {
+  :root {
+    /* Paleta clara */
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: #ffffff;
+    color: #1a1a1a;
+  }
+}

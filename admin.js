@@ -21,6 +21,7 @@ let chartServicosPopulares = null
 let chartCancelamentos = null
 let chartClientesVIP = null
 let chartFaturamento = null
+let chartFaturamentoY = null;
 let chartServicosMensal = null
 
 // Estado de filtros / ordenação / busca
@@ -371,7 +372,8 @@ function montarChartAgendamentosDia(labels, data) {
   chartAgendamentosDia = new Chart(ctx, {
     type: "bar",
     data: { labels, datasets: [{ label: "Agendamentos", data, borderWidth: 0 }] },
-    options: chartOptions({ showLegend:false })
+    options: chartOptions({ showLegend:false, maintainAspectRatio: false
+ })
   })
 }
 
@@ -389,7 +391,8 @@ function montarChartServicosPopulares(labels, data) {
   chartServicosPopulares = new Chart(ctx, {
     type: "pie",
     data: { labels, datasets: [{ label: "Serviços", data, borderWidth: 1 }] },
-    options: chartOptions({ showLegend:true, legendPosition:"right" })
+    options: chartOptions({ showLegend:true, legendPosition:"bottom", maintainAspectRatio: false
+ })
   })
 }
 
@@ -415,10 +418,21 @@ function montarChartCancelamentos(labels, data) {
   const ctx = document.getElementById("chart-cancelamentos")
   if (!ctx) return
   if (chartCancelamentos) chartCancelamentos.destroy()
+
   chartCancelamentos = new Chart(ctx, {
     type: "bar",
-    data: { labels, datasets: [{ label: "Cancelamentos", data, borderWidth: 0 }] },
-    options: chartOptions({ showLegend:false })
+    data: {
+      labels,
+      datasets: [{
+        label: "Cancelamentos",
+        data,
+        borderWidth: 0
+      }]
+    },
+    options: chartOptions({
+      showLegend: false,
+      maintainAspectRatio: false
+    })
   })
 }
 
@@ -481,13 +495,71 @@ function construirFaturamentoUltimosDias(agendamentos, mapaServicosLocal, dias=3
   return { labels, data: labels.map(l=>mapa[l]||0) }
 }
 function montarChartFaturamento(labels, data) {
-  const ctx = document.getElementById("chart-faturamento")
-  if (!ctx) return
+  const mainCtx = document.getElementById("chart-faturamento")
+  const yCtx = document.getElementById("chart-faturamento-yaxis")
+
+  if (!mainCtx || !yCtx) return
+
   if (chartFaturamento) chartFaturamento.destroy()
-  chartFaturamento = new Chart(ctx, {
+  if (chartFaturamentoY) chartFaturamentoY.destroy()
+
+  /* === Grafico principal (sem eixo Y) === */
+  chartFaturamento = new Chart(mainCtx, {
     type: "line",
-    data: { labels, datasets: [{ label: "Faturamento (R$)", data, borderWidth:2, fill:false, tension:0.25 }] },
-    options: chartOptions({ showLegend:false, yCurrency:true })
+    data: {
+      labels,
+      datasets: [{
+        label: "",
+        data,
+        borderWidth: 2,
+        fill: false,
+        tension: 0.25
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          ticks: {
+            autoSkip: false,
+            color: "#ccc",
+            maxRotation: 45,
+            minRotation: 0
+          },
+          grid: { display: false }
+        },
+        y: {
+          display: false   // ← Y removido aqui
+        }
+      },
+      plugins: { legend: { display: false } }
+    }
+  })
+
+  /* === Eixo Y em gráfico separado === */
+  chartFaturamentoY = new Chart(yCtx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderWidth: 0,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { display: false },
+        y: {
+          ticks: { color: "#ccc" },
+          beginAtZero: true
+        }
+      },
+      plugins: { legend: { display: false } }
+    }
   })
 }
 
@@ -557,26 +629,37 @@ function atualizarGraficos(agendamentosFiltrados) {
 /* BLOCO 8 - RELATÓRIOS E UTILITÁRIOS */
 
 // Relatório de clientes (agrupa e renderiza tabela clients-table)
+
+// utilitário pequeno: mantem somente dígitos no telefone
+function somenteDigitos(str) {
+  return String(str || "").replace(/\D/g, "");
+}
+
 function construirRelatorioClientes(agendamentosFiltrados) {
-  const mapa = {}
-  agendamentosFiltrados.forEach(a => {
-    const tel = (a.telefone||"").replace(/\D/g,"")
-    const chave = tel || (a.nome||"Anônimo")
-    if (!mapa[chave]) mapa[chave] = { nome: a.nome || chave, telefone: tel, visitas: 0, ultimaVisita: null, gasto: 0, servicos: {} }
-    mapa[chave].visitas++
-    if (!mapa[chave].ultimaVisita || a.data > mapa[chave].ultimaVisita) mapa[chave].ultimaVisita = a.data
-    const preco = (mapaServicos[a.servico] && Number(mapaServicos[a.servico].preco)) || (a.preco ? Number(a.preco) : 0)
-    mapa[chave].gasto += preco
-    mapa[chave].servicos[a.servico || "—"] = (mapa[chave].servicos[a.servico||"—"]||0)+1
-  })
-  return mapa
+  const mapa = {};
+  (agendamentosFiltrados || []).forEach(a => {
+    const tel = somenteDigitos(a.telefone);
+    const chave = tel || (a.nome || "Anônimo");
+    if (!mapa[chave]) mapa[chave] = { __key: chave, nome: a.nome || chave, telefone: tel, visitas: 0, ultimaVisita: null, gasto: 0, servicos: {} };
+    mapa[chave].visitas++;
+    if (!mapa[chave].ultimaVisita || a.data > mapa[chave].ultimaVisita) mapa[chave].ultimaVisita = a.data;
+    const preco = (mapaServicos[a.servico] && Number(mapaServicos[a.servico].preco)) || (a.preco ? Number(a.preco) : 0);
+    mapa[chave].gasto += preco;
+    const servNome = a.servico || "—";
+    mapa[chave].servicos[servNome] = (mapa[chave].servicos[servNome] || 0) + 1;
+  });
+  return mapa;
 }
 
 function renderRelatorioClientes(agendamentosFiltrados) {
-  const mapa = construirRelatorioClientes(agendamentosFiltrados)
-  const tbody = document.getElementById("clients-table")
-  if (!tbody) return
-  const rows = Object.values(mapa).map(c => `
+  const mapa = construirRelatorioClientes(agendamentosFiltrados);
+  const tbody = document.getElementById("clients-table");
+  if (!tbody) return;
+
+  // transforma em array e ordena por visitas (maiores primeiro) para exibição
+  const clientes = Object.values(mapa).sort((a,b)=> (b.visitas||0) - (a.visitas||0));
+
+  const rows = clientes.map(c => `
     <tr>
       <td class="px-6 py-3">${escapeHtml(c.nome)}</td>
       <td class="px-6 py-3">${escapeHtml(c.ultimaVisita || "—")}</td>
@@ -584,14 +667,23 @@ function renderRelatorioClientes(agendamentosFiltrados) {
       <td class="px-6 py-3">${escapeHtml(String(c.visitas || 0))}</td>
       <td class="px-6 py-3">${formatarBRL(c.gasto)}</td>
       <td class="px-6 py-3">${escapeHtml(Object.keys(c.servicos).slice(0,3).join(", "))}</td>
-      <td class="px-6 py-3"><button class="px-2 py-1 bg-amber-500 text-black rounded text-xs">Ver</button></td>
+      <td class="px-6 py-3">
+  <a href="https://wa.me/${c.telefone}" 
+     target="_blank"
+     class="px-2 py-1 bg-green-500 text-black rounded text-xs font-semibold">
+    WhatsApp
+  </a>
+</td>
+
     </tr>
-  `).join("")
-  tbody.innerHTML = rows || `<tr><td colspan="7" class="px-6 py-8 text-center text-zinc-500">Sem clientes</td></tr>`
-  // ranking
-  const ranking = Object.values(mapa).sort((a,b)=>b.visitas-a.visitas).slice(0,5)
-  const ol = document.getElementById("ranking-clientes")
-  if (ol) ol.innerHTML = ranking.map(r => `<li>${escapeHtml(r.nome)} — ${r.visitas} visitas</li>`).join("") || "<li>Nenhum</li>"
+  `).join("");
+
+  tbody.innerHTML = rows || `<tr><td colspan="7" class="px-6 py-8 text-center text-zinc-500">Sem clientes</td></tr>`;
+
+  // ranking dos top 5
+  const ranking = clientes.slice(0,5);
+  const ol = document.getElementById("ranking-clientes");
+  if (ol) ol.innerHTML = ranking.map(r => `<li>${escapeHtml(r.nome)} — ${r.visitas} visitas</li>`).join("") || "<li>Nenhum</li>";
 }
 
 // Chamadas auxiliares públicas para botões
@@ -754,3 +846,56 @@ window.recarregarDashboard = function() {
 // Expor filtrosAtuais para debug
 window._filtrosAtuais = filtrosAtuais
 
+/* MENU MOBILE - FUNCIONAMENTO + ANIMAÇÃO + FECHAR AO CLICAR FORA */
+document.addEventListener("DOMContentLoaded", () => {
+  const btnMenu = document.querySelector("[data-action='menu-toggle']");
+  const mobileMenu = document.getElementById("mobile-menu");
+
+  if (!btnMenu || !mobileMenu) return;
+
+  // ANIMAÇÃO: define estado inicial
+  mobileMenu.classList.add("transition-all", "duration-300", "ease-out", "opacity-0", "-translate-y-2");
+
+  btnMenu.addEventListener("click", (e) => {
+    e.stopPropagation(); // evitar conflito com click fora
+
+    const isHidden = mobileMenu.classList.contains("hidden");
+
+    if (isHidden) {
+      // ABRIR
+      mobileMenu.classList.remove("hidden");
+      setTimeout(() => {
+        mobileMenu.classList.remove("opacity-0", "-translate-y-2");
+        mobileMenu.classList.add("opacity-100", "translate-y-0");
+      }, 10);
+    } else {
+      // FECHAR
+      mobileMenu.classList.remove("opacity-100", "translate-y-0");
+      mobileMenu.classList.add("opacity-0", "-translate-y-2");
+
+      setTimeout(() => {
+        mobileMenu.classList.add("hidden");
+      }, 250);
+    }
+  });
+
+  // FECHAR AO CLICAR FORA
+  document.addEventListener("click", (e) => {
+    const isOpen = !mobileMenu.classList.contains("hidden");
+
+    if (!isOpen) return;
+
+    const clickedInsideMenu = mobileMenu.contains(e.target);
+    const clickedButton = btnMenu.contains(e.target);
+
+    if (!clickedInsideMenu && !clickedButton) {
+      // animação de fechar
+      mobileMenu.classList.remove("opacity-100", "translate-y-0");
+      mobileMenu.classList.add("opacity-0", "-translate-y-2");
+
+      setTimeout(() => {
+        mobileMenu.classList.add("hidden");
+      }, 250);
+    }
+  });
+});
