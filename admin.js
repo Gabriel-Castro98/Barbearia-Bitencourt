@@ -899,3 +899,277 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+// ----------------------------------
+// BLOQUEIOS DIAS - FÉRIAS - HORÁRIOS
+// ----------------------------------
+
+/*
+Firestore: coleção "bloqueios"
+Cada documento tem um campo "tipo" com string:
+ - "dia"      -> campos: data: "YYYY-MM-DD"
+ - "intervalo"-> campos: inicio: "YYYY-MM-DD", fim: "YYYY-MM-DD"
+ - "horario"  -> campos: dia: "YYYY-MM-DD", horaInicio: "HH:MM", horaFim: "HH:MM"
+(essa é a estrutura que você descreveu — o código normaliza dinamicamente)
+*/
+
+// util
+function fmtDateStr(d) { return d } // já vem no formato Y-m-d do flatpickr
+
+// Carrega todos os documentos da coleção "bloqueios" e normaliza
+async function carregarBloqueios() {
+  try {
+    const snap = await getDocs(collection(db, "bloqueios"));
+    const dias = [];
+    const intervalos = [];
+    const horarios = [];
+
+    snap.forEach(docSnap => {
+      const data = docSnap.data();
+      const id = docSnap.id;
+      const tipo = (data.tipo || "").toLowerCase();
+
+      if (tipo === "dia") {
+        // exemplo: { data: "2025-02-10", tipo: "dia" }
+        dias.push({ id, data: data.data });
+      } else if (tipo === "intervalo") {
+        // exemplo: { inicio: "2025-02-10", fim: "2025-02-20", tipo: "intervalo" }
+        intervalos.push({ id, inicio: data.inicio, fim: data.fim });
+      } else if (tipo === "horario") {
+        // exemplo: { dia: "2025-02-10", horaInicio: "14:00", horaFim: "18:00", tipo: "horario" }
+        // OBS: você indicou campos nomeados horaInicio/horaFim — aqui aceitamos esses nomes
+        horarios.push({
+          id,
+          dia: data.dia,
+          horaInicio: data.horaInicio || data.horaInicio || data.hora || data.horaInicio, // tentativa de fallback
+          horaFim: data.horaFim || data.horaFim || data.horaFim // manter
+        });
+      } else {
+        // se não tiver tipo, tentar inferir (backwards compat)
+        if (data.data) dias.push({ id, data: data.data });
+        else if (data.inicio && data.fim) intervalos.push({ id, inicio: data.inicio, fim: data.fim });
+        else if (data.dia && (data.horaInicio || data.hora)) horarios.push({ id, dia: data.dia, horaInicio: data.horaInicio || data.hora, horaFim: data.horaFim || data.horaFim });
+      }
+    });
+
+    return { dias, intervalos, horarios };
+  } catch (err) {
+    console.error("Erro ao carregar bloqueios:", err);
+    return { dias: [], intervalos: [], horarios: [] };
+  }
+}
+
+// Salvar novo bloqueio (adiciona documento novo com campo tipo)
+async function salvarBloqueioNovo(payload) {
+  // payload deve conter um campo 'tipo'
+  try {
+    await addDoc(collection(db, "bloqueios"), payload);
+    return true;
+  } catch (err) {
+    console.error("Erro ao salvar bloqueio:", err);
+    return false;
+  }
+}
+
+async function deletarBloqueio(id) {
+  try {
+    await deleteDoc(doc(db, "bloqueios", id));
+    return true;
+  } catch (err) {
+    console.error("Erro ao deletar bloqueio:", err);
+    return false;
+  }
+}
+
+// Render da tabela de bloqueios ativos
+async function renderBloqueiosTabela() {
+  const { dias, intervalos, horarios } = await carregarBloqueios();
+  const tbody = document.getElementById("bloqueios-tabela");
+  if (!tbody) return;
+  const rows = [];
+
+  dias.forEach(d => rows.push({
+    tipo: "Dia inteiro",
+    info: d.data,
+    id: d.id
+  }));
+
+  intervalos.forEach(i => rows.push({
+    tipo: "Intervalo (férias)",
+    info: `${i.inicio} → ${i.fim}`,
+    id: i.id
+  }));
+
+  horarios.forEach(h => rows.push({
+    tipo: "Horário",
+    info: `${h.dia} — ${h.horaInicio} até ${h.horaFim || "?"}`,
+    id: h.id
+  }));
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" class="px-4 py-6 text-center text-zinc-500">Nenhum bloqueio encontrado...</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td class="px-4 py-3">${escapeHtml(r.tipo)}</td>
+      <td class="px-4 py-3">${escapeHtml(r.info)}</td>
+      <td class="px-4 py-3">
+        <button data-delete="${r.id}" class="px-2 py-1 bg-red-600 text-white rounded text-xs">Remover</button>
+      </td>
+    </tr>
+  `).join("");
+
+  // attach delete handlers
+  tbody.querySelectorAll("button[data-delete]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.dataset.delete;
+      if (!confirm("Remover esse bloqueio?")) return;
+      const ok = await deletarBloqueio(id);
+      if (ok) {
+        await renderBloqueiosTabela();
+        inicializarCalendarioComBloqueios(); // rebind calendario
+      } else alert("Erro ao remover.");
+    });
+  });
+}
+
+// flatpickr instances
+let fp_bloqueioDia = null;
+let fp_intervaloInicio = null;
+let fp_intervaloFim = null;
+let fp_horarioDia = null;
+let fp_horarioInicio = null;
+let fp_horarioFim = null;
+let fp_calendarioBloqueios = null;
+
+// Inicializa todos os flatpickrs e o calendário principal (com bloqueios aplicados)
+async function inicializarCalendarioComBloqueios() {
+  // primeiro carregue bloqueios (para usar nas regras disable)
+  const bloqueios = await carregarBloqueios();
+
+  // prepare arrays para flatpickr disable
+  const diasSimples = (bloqueios.dias || []).map(d => d.data); // ["2025-02-10", ...]
+  const intervalosFP = (bloqueios.intervalos || []).map(i => ({ from: i.inicio, to: i.fim }));
+
+  // limpa instâncias anteriores (se existirem)
+  if (fp_calendarioBloqueios) fp_calendarioBloqueios.destroy();
+
+  const calendarioEl = document.getElementById("calendario-bloqueios");
+  // se não houver elemento, criar um flatpickr "oculto"? preferimos inicializar sobre um input específico.
+  // Caso você queira um calendário full-size, crie um <input id="calendario-bloqueios" type="text"> no HTML onde quiser.
+  if (!calendarioEl) {
+    // não temos elemento específico — tentar inicializar no campo de bloqueio-dia (apenas para visual)
+    const el = document.getElementById("bloqueio-dia");
+    if (!el) return;
+    fp_calendarioBloqueios = window.flatpickr(el, {
+      locale: "pt",
+      dateFormat: "Y-m-d",
+      minDate: "today",
+      clickOpens: true,
+      disable: [
+        ...diasSimples,
+        ...intervalosFP
+      ],
+      onChange: function(selectedDates) { /* nada especial */ }
+    });
+  } else {
+    fp_calendarioBloqueios = window.flatpickr(calendarioEl, {
+      locale: "pt",
+      dateFormat: "Y-m-d",
+      minDate: "today",
+      clickOpens: true,
+      disable: [
+        ...diasSimples,
+        ...intervalosFP
+      ],
+      onChange: function(selectedDates) { /* nada especial */ }
+    });
+  }
+}
+
+// Inicializa flatpickr nos inputs da UI (chame uma vez)
+function inicializarInputsFlatpickr() {
+  // destroi se já inicializado
+  fp_bloqueioDia?.destroy();
+  fp_intervaloInicio?.destroy();
+  fp_intervaloFim?.destroy();
+  fp_horarioDia?.destroy();
+  fp_horarioInicio?.destroy();
+  fp_horarioFim?.destroy();
+
+  const commonDateOpts = { dateFormat: "Y-m-d", allowInput: true, clickOpens: true, locale: "pt" };
+  const commonTimeOpts = { enableTime: true, noCalendar: true, dateFormat: "H:i", time_24hr: true, allowInput: true, clickOpens: true };
+
+  fp_bloqueioDia = window.flatpickr(document.getElementById("bloqueio-dia"), commonDateOpts);
+  fp_intervaloInicio = window.flatpickr(document.getElementById("intervalo-inicio"), commonDateOpts);
+  fp_intervaloFim = window.flatpickr(document.getElementById("intervalo-fim"), commonDateOpts);
+
+  fp_horarioDia = window.flatpickr(document.getElementById("horario-dia"), commonDateOpts);
+  fp_horarioInicio = window.flatpickr(document.getElementById("horario-inicio"), commonTimeOpts);
+  fp_horarioFim = window.flatpickr(document.getElementById("horario-fim"), commonTimeOpts);
+}
+
+// Hook: DOM ready para bind de botões
+document.addEventListener("DOMContentLoaded", async () => {
+  // inicializa inputs
+  inicializarInputsFlatpickr();
+
+  // inicializar calendario com bloqueios (usa dados do Firestore)
+  await inicializarCalendarioComBloqueios();
+
+  // render tabela
+  await renderBloqueiosTabela();
+
+  // --- Handlers dos botões ---
+  document.getElementById("btn-bloquear-dia")?.addEventListener("click", async () => {
+    const val = document.getElementById("bloqueio-dia")?.value;
+    if (!val) return alert("Selecione uma data!");
+    const payload = { tipo: "dia", data: val };
+    const ok = await salvarBloqueioNovo(payload);
+    if (ok) {
+      alert("Dia bloqueado com sucesso!");
+      await renderBloqueiosTabela();
+      await inicializarCalendarioComBloqueios();
+      // limpa input
+      document.getElementById("bloqueio-dia").value = "";
+    } else alert("Erro ao salvar bloqueio.");
+  });
+
+  document.getElementById("btn-bloquear-intervalo")?.addEventListener("click", async () => {
+    const inicio = document.getElementById("intervalo-inicio")?.value;
+    const fim = document.getElementById("intervalo-fim")?.value;
+    if (!inicio || !fim) return alert("Selecione início e fim!");
+    if (inicio > fim) return alert("A data de início não pode ser maior que a de fim.");
+    const payload = { tipo: "intervalo", inicio, fim };
+    const ok = await salvarBloqueioNovo(payload);
+    if (ok) {
+      alert("Intervalo bloqueado!");
+      await renderBloqueiosTabela();
+      await inicializarCalendarioComBloqueios();
+      document.getElementById("intervalo-inicio").value = "";
+      document.getElementById("intervalo-fim").value = "";
+    } else alert("Erro ao salvar.");
+  });
+
+  document.getElementById("btn-bloquear-horario")?.addEventListener("click", async () => {
+    const dia = document.getElementById("horario-dia")?.value;
+    const horaInicio = document.getElementById("horario-inicio")?.value;
+    const horaFim = document.getElementById("horario-fim")?.value;
+    if (!dia || !horaInicio || !horaFim) return alert("Preencha dia, hora início e hora fim!");
+    if (horaInicio >= horaFim) return alert("Hora início deve ser menor que hora fim.");
+
+    // salva com a estrutura que você tem (tipo horario + campos)
+    const payload = { tipo: "horario", dia, horaInicio, horaFim };
+    const ok = await salvarBloqueioNovo(payload);
+    if (ok) {
+      alert("Horário bloqueado!");
+      await renderBloqueiosTabela();
+      // obs: o calendário de datas não "desabilita" horários — você precisará aplicar essa lista de bloqueios.horarios
+      // ao validar disponibilidade quando alguém for agendar (isso deve ser lido na lógica de agendamento).
+      document.getElementById("horario-dia").value = "";
+      document.getElementById("horario-inicio").value = "";
+      document.getElementById("horario-fim").value = "";
+    } else alert("Erro ao salvar.");
+  });
+});

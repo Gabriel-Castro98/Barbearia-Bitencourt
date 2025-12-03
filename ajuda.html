@@ -208,54 +208,7 @@
             <p>Desenvolvido por Gabriel Castro</p>
         </div>
     </footer>
-    <script type="module">
-import { auth, db } from "./firebase-config.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-firestore.js";
 
-onAuthStateChanged(auth, async (user) => {
-    const userNameDesktop = document.getElementById("user-name");
-    const logoutDesktop = document.getElementById("logout-btn");
-
-    const logoutMobile = document.getElementById("mobile-logout-btn");
-
-    const adminBtn = document.getElementById("admin-btn");
-    const mobileAdminBtn = document.getElementById("mobile-admin-btn");
-
-    if (user) {
-        const nome = user.displayName || "Cliente";
-        if (userNameDesktop) userNameDesktop.textContent = `Olá, ${nome}`;
-
-        if (logoutDesktop) logoutDesktop.classList.remove("hidden");
-        if (logoutMobile) logoutMobile.classList.remove("hidden");
-
-        try {
-            const ref = doc(db, "usuarios", user.uid);
-            const snap = await getDoc(ref);
-
-            const isAdmin = snap.exists() && snap.data().role === "admin";
-
-            if (isAdmin) {
-                adminBtn?.classList.remove("hidden");
-                mobileAdminBtn?.classList.remove("hidden");
-            } else {
-                adminBtn?.classList.add("hidden");
-                mobileAdminBtn?.classList.add("hidden");
-            }
-        } catch (error) {
-            console.error("Erro ao verificar admin:", error);
-        }
-
-    } else {
-        if (userNameDesktop) userNameDesktop.textContent = "";
-        if (logoutDesktop) logoutDesktop.classList.add("hidden");
-        if (logoutMobile) logoutMobile.classList.add("hidden");
-
-        adminBtn?.classList.add("hidden");
-        mobileAdminBtn?.classList.add("hidden");
-    }
-});
-</script>
-<script type="module" src="script.js"></script>
+<script type="module" src="ajuda.js"></script>
 </body>
 </html>

@@ -365,6 +365,97 @@ body { font-family: 'Poppins', sans-serif; }
 
   </div>
 </section>
+
+<!-- ========================================= -->
+<!--         GERENCIAMENTO DE BLOQUEIOS        -->
+<!-- ========================================= -->
+<section id="bloqueios" class="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden mt-6">
+  <div class="p-6 border-b border-zinc-800">
+    <h2 class="text-xl font-bold">Gerenciamento de Bloqueios</h2>
+    <p class="text-zinc-400 text-sm mt-1">Bloqueie dias, períodos de férias ou horários específicos.</p>
+  </div>
+
+  <div class="p-6 space-y-8">
+
+    <!-- ABA 1 - BLOQUEAR DIA ÚNICO -->
+    <div class="bg-zinc-800 p-5 rounded-xl space-y-4">
+      <h3 class="text-lg font-semibold text-zinc-200">Bloquear Dia</h3>
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <input id="bloqueio-dia" type="text"
+          class="bg-zinc-900 border border-zinc-700 rounded px-4 py-2 text-zinc-200 w-full">
+        
+        <button id="btn-bloquear-dia"
+          class="bg-amber-500 text-black px-4 py-2 rounded font-semibold w-full sm:w-auto">
+          Bloquear Dia
+        </button>
+      </div>
+    </div>
+
+    <!-- ABA 2 - BLOQUEAR INTERVALO DE DIAS -->
+    <div class="bg-zinc-800 p-5 rounded-xl space-y-4">
+      <h3 class="text-lg font-semibold text-zinc-200">Bloquear Intervalo (Férias)</h3>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <input id="intervalo-inicio" type="text"
+          class="bg-zinc-900 border border-zinc-700 rounded px-4 py-2 text-zinc-200">
+
+        <input id="intervalo-fim" type="text"
+          class="bg-zinc-900 border border-zinc-700 rounded px-4 py-2 text-zinc-200">
+      </div>
+
+      <button id="btn-bloquear-intervalo"
+        class="bg-amber-500 text-black px-4 py-2 rounded font-semibold w-full sm:w-auto">
+        Bloquear Intervalo
+      </button>
+    </div>
+
+    <!-- ABA 3 - BLOQUEAR HORÁRIOS ESPECÍFICOS -->
+    <div class="bg-zinc-800 p-5 rounded-xl space-y-4">
+      <h3 class="text-lg font-semibold text-zinc-200">Bloquear Horário</h3>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <input id="horario-dia" type="text"
+          class="bg-zinc-900 border border-zinc-700 rounded px-4 py-2 text-zinc-200">
+
+        <input id="horario-inicio" type="text"
+          class="bg-zinc-900 border border-zinc-700 rounded px-4 py-2 text-zinc-200">
+
+        <input id="horario-fim" type="text"
+          class="bg-zinc-900 border border-zinc-700 rounded px-4 py-2 text-zinc-200">
+      </div>
+
+      <button id="btn-bloquear-horario"
+        class="bg-amber-500 text-black px-4 py-2 rounded font-semibold w-full sm:w-auto">
+        Bloquear Horário
+      </button>
+    </div>
+
+    <!-- LISTAGEM DOS BLOQUEIOS -->
+    <div class="bg-zinc-800 p-5 rounded-xl">
+      <h3 class="text-lg font-semibold text-zinc-200 mb-4">Bloqueios Ativos</h3>
+
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-zinc-900/50">
+            <tr>
+              <th class="px-4 py-3 text-left text-sm">Tipo</th>
+              <th class="px-4 py-3 text-left text-sm">Informações</th>
+              <th class="px-4 py-3 text-left text-sm">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="bloqueios-tabela" class="divide-y divide-zinc-700">
+            <tr>
+              <td colspan="3" class="px-4 py-6 text-center text-zinc-500">
+                Nenhum bloqueio encontrado...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
 </main>
 
 <footer class="bg-zinc-900 py-12 text-center text-zinc-400 mt-20">
